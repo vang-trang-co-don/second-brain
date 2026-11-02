@@ -5,7 +5,7 @@
 ---
 
 ## 🏷️ Tag Cloud
-`#agentic-workflow` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture`
+`#agentic-workflow` • `#reverse-engineering` `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture`
 
 ---
 
@@ -14,6 +14,8 @@
 ### 1. 🤖 Agentic Workflows & AI Software Engineering
 * [Lauren (@poteto) - Kiến Trúc Kỹ Thuật & Agentic Workflow Game tibo.dog](entries/agentic-workflows/poteto-tibo-dog-engineering.md)
   * *Keywords:* 1,150 PRs trong 4 ngày, rào chắn lint rule, cấm comment code, headless bot playtesting.
+* [Reverse Engineering SaaS Internal API & Bypassing Immutable Constraints](entries/agentic-workflows/reverse-engineering-saas-api-bypassing-immutable-constraints.md)
+  * *Keywords:* Trích xuất cookie từ trình duyệt đang mở, dịch ngược SPA JS bundle, lách rào cản immutable IAM email & giới hạn quota license SaaS.
 
 ### 2. ⚡ Performance & Systems
 * *(Đang tổng hợp từ case study tibo.dog: Zero-Allocation Hot Path với hậu tố `.hot.ts`)*
