@@ -5,35 +5,56 @@
 ---
 
 ## Metadata
-- **Source:** [URL / Book / Paper / Tweet]
+- **Source:** [URL / Repo / Production Database]
 - **Author/Creator:** [Tên tác giả, handle @, công ty nếu có]
 - **Captured Date:** [YYYY-MM-DD]
 - **Tags:** `#tag1` `#tag2` `#tag3`
-- **Category:** `[agentic-workflows | performance | formal-methods | architecture | web-creative | ...]`
+- **Category:** `[architecture | agentic-workflows | performance | formal-methods | web-creative | ...]`
 
 ---
 
-## 1. The Core Idea (Ý tưởng cốt lõi)
-[Mô tả bối cảnh và lý do tại sao ý tưởng này thú vị / đột phá]
+## 1. The Core Idea (Sự Thật Thực Địa & Vấn Đề Cốt Lõi)
+- Bối cảnh thực tế khác biệt thế nào so với lý thuyết sách vở / ERP truyền thống.
+- Các bất biến nghiệp vụ (Domain Invariants) và những ràng buộc cấm kỵ.
 
 ---
 
-## 2. Key Mechanisms & Patterns (Cơ chế & Kỹ thuật chi tiết)
-- **Điểm 1:** [Chi tiết kỹ thuật]
-- **Điểm 2:** [Chi tiết kỹ thuật]
+## 2. Key Mechanisms & Patterns (Cơ Chế Chi Tiết)
+- Mô hình kiến trúc phân tầng / phân ô độc lập.
+- Các cơ chế kiểm soát, phân quyền và bảo vệ luồng dữ liệu.
 
 ---
 
-## 3. Actionable Application (Cách áp dụng thực tế vào dự án)
-- [ ] **Khi nào nên dùng:**
-- [ ] **Cách triển khai:**
-- [ ] **Code / Config snippet minh họa:**
+## 3. Real-World Production Cases (Các Tình Huống Thực Tế)
+- Mô tả 3-5 ca lằng nhằng, ngoại lệ đã xảy ra trên thực địa.
+- Phân tích nguyên nhân và cách xử lý triệt để.
 
-```typescript
-// Ví dụ minh họa nếu có
+---
+
+## 4. Reconstructability Blueprint (Bản Vẽ Tái Dựng Độc Lập)
+
+> **Mục tiêu:** Một kỹ sư đọc phần này có thể code lại 100% hệ thống bằng bất kỳ ngôn ngữ nào (Go, Rust, TypeScript, Python) mà không cần xem lại codebase cũ.
+
+### A. Authoritative Data Schema (SQL DDL)
+```sql
+-- Toàn bộ bảng, cột, kiểu dữ liệu, khóa ngoại, chỉ mục
 ```
 
+### B. Core Structs & Data Shapes
+```go
+// hoặc TypeScript types
+```
+
+### C. State Machine & Transition Guards
+- Danh sách trạng thái và điều kiện tiên quyết để chuyển trạng thái.
+
+### D. Core Algorithms, Parsers & Formulas
+- Regex, hàm bóc tách dữ liệu cụ thể, logic sinh mã hoặc tính toán.
+
+### E. API Interface Contracts
+- Danh sách endpoints REST/gRPC với request/response mẫu tương thích UI.
+
 ---
 
-## 4. Related Links & Notes
-- Liên kết chéo đến các note khác trong Second Brain: `[Link](../category/note.md)`
+## 5. Related Links & Notes
+- Liên kết chéo: `[Tên Note](../category/note.md)`
