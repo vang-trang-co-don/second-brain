@@ -207,6 +207,374 @@ export interface PurchaseOrderRecord {
 
 ---
 
-## 5. Related Links & Notes
+## 5. Go Architecture Blueprint (Bản Vẽ Kỹ Thuật Tái Dựng Bằng Pure Go)
+
+Hệ thống được thiết kế để có thể chuyển dịch hoàn toàn sang một microservice viết bằng **Go (Golang)** duy nhất (`go-nemnem-admin`), binary ~15MB, không cần Python hay Frappe runtime, cắm trực tiếp vào Frontend React SPA hiện tại.
+
+### A. SQL Schema DDL (Tương thích PostgreSQL & SQLite)
+```sql
+-- 1. Bảng Nhà cung cấp
+CREATE TABLE suppliers (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    short_name VARCHAR(64),
+    tax_id VARCHAR(32),
+    bank_code VARCHAR(32),        -- VCB, MB, ACB, TCB...
+    bank_account VARCHAR(64),     -- Số tài khoản nhận tiền
+    bank_account_name VARCHAR(255),
+    payment_terms_days INT DEFAULT 0, -- Số ngày cho nợ (0 = thanh toán ngay)
+    default_outlet VARCHAR(64) DEFAULT 'Bếp',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Bảng Danh mục Hàng hoá / Nguyên vật liệu
+CREATE TABLE items (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    uom VARCHAR(32) NOT NULL DEFAULT 'Kg',
+    buying_price BIGINT NOT NULL DEFAULT 0, -- VND nguyên, không dùng float
+    min_order_qty NUMERIC(10, 2) DEFAULT 1.0,
+    default_supplier_id VARCHAR(64) REFERENCES suppliers(id),
+    default_outlet VARCHAR(64) DEFAULT 'Bếp',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Bảng Từ điển Tên gọi tắt (Item Alias)
+CREATE TABLE item_aliases (
+    id SERIAL PRIMARY KEY,
+    alias_name VARCHAR(255) NOT NULL UNIQUE,
+    item_id VARCHAR(64) NOT NULL REFERENCES items(id),
+    confidence NUMERIC(3, 2) DEFAULT 1.0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_item_aliases_alias ON item_aliases(alias_name);
+
+-- 4. Bảng Đơn đặt hàng (Purchase Order)
+CREATE TABLE purchase_orders (
+    id VARCHAR(64) PRIMARY KEY,            -- PO-YYYY-XXXXX
+    company VARCHAR(255) NOT NULL,
+    supplier_id VARCHAR(64) NOT NULL REFERENCES suppliers(id),
+    status VARCHAR(32) NOT NULL DEFAULT 'Draft', -- Draft, Confirmed, Receiving, To Bill, Settled, Cancelled
+    schedule_date DATE NOT NULL,
+    due_date DATE,
+    delivery_time VARCHAR(16) DEFAULT '06:00',
+    
+    -- Baseline (Dự kiến ban đầu)
+    ordered_grand_total BIGINT NOT NULL DEFAULT 0,
+    
+    -- Ô 1: Nhận hàng & Trả lại
+    per_received NUMERIC(5, 2) DEFAULT 0.0,
+    actual_total BIGINT NOT NULL DEFAULT 0,
+    returned_total BIGINT NOT NULL DEFAULT 0,
+    delivery_note_file TEXT,
+    
+    -- Ô 2: Hóa đơn điện tử VAT
+    has_vat_invoice SMALLINT DEFAULT 0,
+    bill_no VARCHAR(64),
+    bill_date DATE,
+    vat_invoice_amount BIGINT DEFAULT 0,
+    vat_tax_amount BIGINT DEFAULT 0,
+    vat_status VARCHAR(32) DEFAULT 'Chờ HĐ VAT', -- Chờ HĐ VAT, Đã đủ HĐ VAT, Không có HĐ VAT
+    vat_invoice_file TEXT,
+    
+    -- Ô 3: Duyệt chi & Thanh toán
+    purchasing_reviewed SMALLINT DEFAULT 0,
+    purchasing_reviewed_by VARCHAR(128),
+    purchasing_reviewed_at TIMESTAMP,
+    payment_approved SMALLINT DEFAULT 0,
+    payment_approved_by VARCHAR(128),
+    payment_approved_at TIMESTAMP,
+    paid_amount BIGINT NOT NULL DEFAULT 0,
+    outstanding_amount BIGINT NOT NULL DEFAULT 0,
+    payment_mode VARCHAR(64),
+    payment_ref VARCHAR(128),
+    paid_at TIMESTAMP,
+    
+    created_by VARCHAR(128) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_po_status ON purchase_orders(status);
+CREATE INDEX idx_po_supplier ON purchase_orders(supplier_id);
+CREATE INDEX idx_po_schedule_date ON purchase_orders(schedule_date);
+
+-- 5. Bảng Chi tiết dòng đơn mua (Purchase Order Item)
+CREATE TABLE purchase_order_items (
+    id SERIAL PRIMARY KEY,
+    purchase_order_id VARCHAR(64) NOT NULL REFERENCES purchase_orders(id) ON DELETE CASCADE,
+    item_id VARCHAR(64) REFERENCES items(id),
+    raw_name VARCHAR(255) NOT NULL,
+    qty NUMERIC(10, 2) NOT NULL,
+    uom VARCHAR(32) NOT NULL,
+    rate BIGINT NOT NULL,                  -- Đơn giá baseline
+    amount BIGINT NOT NULL,
+    received_qty NUMERIC(10, 2) DEFAULT 0.0,
+    returned_qty NUMERIC(10, 2) DEFAULT 0.0,
+    actual_rate BIGINT DEFAULT 0,          -- Đơn giá thực nhận trên phiếu giao
+    actual_amount BIGINT DEFAULT 0
+);
+
+-- 6. Bảng Chứng từ mua hàng (Purchase Document)
+CREATE TABLE purchase_documents (
+    id VARCHAR(64) PRIMARY KEY,            -- PDC-YYYY-XXXXX
+    purchase_order_id VARCHAR(64) REFERENCES purchase_orders(id),
+    supplier_id VARCHAR(64) REFERENCES suppliers(id),
+    file_path TEXT NOT NULL,
+    is_delivery_note SMALLINT DEFAULT 0,
+    is_vat_invoice SMALLINT DEFAULT 0,
+    is_payment_proof SMALLINT DEFAULT 0,
+    invoice_no VARCHAR(64),
+    invoice_date DATE,
+    amount BIGINT DEFAULT 0,
+    issuer_name VARCHAR(255),
+    issuer_tax_id VARCHAR(32),
+    raw_ocr_json JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. Bảng Lịch sử biến động giá (Price Log)
+CREATE TABLE price_logs (
+    id SERIAL PRIMARY KEY,
+    item_id VARCHAR(64) NOT NULL REFERENCES items(id),
+    supplier_id VARCHAR(64) NOT NULL REFERENCES suppliers(id),
+    old_rate BIGINT NOT NULL,
+    new_rate BIGINT NOT NULL,
+    change_pct NUMERIC(5, 2) NOT NULL,
+    source_type VARCHAR(64) NOT NULL,     -- 'Phiếu giao', 'Hoá đơn VAT', 'Báo giá'
+    source_ref VARCHAR(64) NOT NULL,      -- Mã PO hoặc mã chứng từ
+    note TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. Bảng Tin nhắn Chat Ingest (WhatsApp / Chat Bridge Buffer)
+CREATE TABLE chat_message_logs (
+    id VARCHAR(64) PRIMARY KEY,
+    chat_id VARCHAR(128) NOT NULL,
+    sender_name VARCHAR(128) NOT NULL,
+    message_text TEXT NOT NULL,
+    outlet VARCHAR(64) DEFAULT 'Bếp',
+    summary_status VARCHAR(32) DEFAULT 'Chờ xử lý', -- 'Chờ xử lý', 'Đã gom PO', 'Bỏ qua'
+    summary_ref VARCHAR(64),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+### B. Core Go Structs & Idiomatic Domain Models
+```go
+package domain
+
+import (
+	"time"
+)
+
+type Money = int64 // Tiền tệ lưu bằng VND nguyên, tuyệt đối không dùng float
+
+type UnifiedPOStage string
+const (
+	StageDraft            UnifiedPOStage = "draft"
+	StageConfirmed        UnifiedPOStage = "confirmed"
+	StageReceiving        UnifiedPOStage = "receiving"
+	StageAwaitingApproval UnifiedPOStage = "awaiting_approval"
+	StageAwaitingPayment  UnifiedPOStage = "awaiting_payment"
+	StagePaidMissingVat   UnifiedPOStage = "paid_missing_vat"
+	StageSettled          UnifiedPOStage = "settled"
+	StageCancelled        UnifiedPOStage = "cancelled"
+)
+
+type PurchaseOrder struct {
+	ID                string         `json:"name"`
+	Company           string         `json:"company"`
+	SupplierID        string         `json:"supplier"`
+	SupplierName      string         `json:"supplier_name"`
+	Status            string         `json:"status"`
+	Stage             UnifiedPOStage `json:"stage"`
+	ScheduleDate      string         `json:"schedule_date"`
+	DueDate           string         `json:"due_date"`
+	
+	// Financials
+	OrderedGrandTotal Money          `json:"ordered_grand_total"`
+	ActualTotal       Money          `json:"actual_total"`
+	ReturnedTotal     Money          `json:"returned_total"`
+	PaidAmount        Money          `json:"paid_amount"`
+	OutstandingAmount Money          `json:"outstanding_amount"`
+	
+	// Proof Flags
+	PerReceived        float64       `json:"per_received"`
+	PurchasingReviewed bool          `json:"purchasing_reviewed"`
+	PaymentApproved    bool          `json:"payment_approved"`
+	HasVatInvoice      bool          `json:"has_vat_invoice"`
+	VatStatus          string        `json:"vat_status"`
+	BillNo             string        `json:"bill_no"`
+	
+	Items []POItem `json:"items,omitempty"`
+}
+
+type POItem struct {
+	ID           int64   `json:"id"`
+	ItemID       string  `json:"item_code"`
+	RawName      string  `json:"item_name"`
+	Qty          float64 `json:"qty"`
+	UOM          string  `json:"uom"`
+	Rate         Money   `json:"rate"`
+	Amount       Money   `json:"amount"`
+	ReceivedQty  float64 `json:"received_qty"`
+	ReturnedQty  float64 `json:"returned_qty"`
+	ActualRate   Money   `json:"actual_rate"`
+	ActualAmount Money   `json:"actual_amount"`
+}
+```
+
+---
+
+### C. Chat Message Tokenizer & Intake Parser (Thuần Go Regex)
+Chuyển đổi chuỗi tin nhắn của nhân viên thành mảng thực thể món:
+```go
+package intake
+
+import (
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+type ParsedRequestItem struct {
+	RawName string
+	Qty     float64
+	UOM     string
+}
+
+// ItemRegex khớp: "Thịt bò phi lê 2 Kg", "Dưa hấu 30 kg", "Hoành thánh tôm 5 Hộp"
+var lineItemRegex = regexp.MustCompile(`(?i)^(.+?)\s+([0-9]+(?:[\.,][0-9]+)?)\s*([a-zA-Z\p{L}]+)$`)
+
+func ParseChatText(text string) []ParsedRequestItem {
+	var items []ParsedRequestItem
+	// Tách theo dấu phẩy hoặc xuống dòng
+	rawTokens := strings.FieldsFunc(text, func(r rune) bool {
+		return r == ',' || r == '\n' || r == ';'
+	})
+
+	for _, token := range rawTokens {
+		trimmed := strings.TrimSpace(token)
+		if trimmed == "" {
+			continue
+		}
+		matches := lineItemRegex.FindStringSubmatch(trimmed)
+		if len(matches) == 4 {
+			name := strings.TrimSpace(matches[1])
+			qtyStr := strings.ReplaceAll(matches[2], ",", ".")
+			qty, _ := strconv.ParseFloat(qtyStr, 64)
+			uom := strings.TrimSpace(matches[3])
+
+			items = append(items, ParsedRequestItem{
+				RawName: name,
+				Qty:     qty,
+				UOM:     uom,
+			})
+		}
+	}
+	return items
+}
+```
+
+---
+
+### D. Parser Hóa Đơn Điện Tử TT78 Bằng `encoding/xml` Chuẩn
+Bóc tách file XML hóa đơn gốc trong 0ms, không cần AI:
+```go
+package einvoice
+
+import (
+	"encoding/xml"
+	"strconv"
+)
+
+type HDonTT78 struct {
+	XMLName xml.Name `xml:"HDon"`
+	DLHDon  struct {
+		TTChung struct {
+			KHMSHDon string `xml:"KHMSHDon"`
+			KHHDon   string `xml:"KHHDon"`
+			SHDon    string `xml:"SHDon"`
+			NLap     string `xml:"NLap"`
+		} `xml:"TTChung"`
+		NDHDon struct {
+			NBan struct {
+				Ten string `xml:"Ten"`
+				MST string `xml:"MST"`
+			} `xml:"NBan"`
+			DSHHDVu struct {
+				HHDVu []struct {
+					THHDVu string  `xml:"THHDVu"`
+					DVTinh string  `xml:"DVTinh"`
+					SLuong float64 `xml:"SLuong"`
+					DGia   float64 `xml:"DGia"`
+					ThTien float64 `xml:"ThTien"`
+				} `xml:"HHDVu"`
+			} `xml:"DSHHDVu"`
+			TToan struct {
+				TgTThue float64 `xml:"TgTThue"`
+				TgTTTBSo float64 `xml:"TgTTTBSo"`
+			} `xml:"TToan"`
+		} `xml:"NDHDon"`
+	} `xml:"DLHDon"`
+}
+
+func ParseEInvoiceXML(data []byte) (*HDonTT78, error) {
+	var invoice HDonTT78
+	if err := xml.Unmarshal(data, &invoice); err != nil {
+		return nil, err
+	}
+	return &invoice, nil
+}
+```
+
+---
+
+### E. Bộ Sinh Mã VietQR Chuẩn NAPAS Trong Go
+```go
+package vietqr
+
+import (
+	"fmt"
+	"net/url"
+)
+
+func GenerateVietQRUrl(bankCode, bankAccount, accountName string, amount int64, content string) string {
+	escapedName := url.QueryEscape(accountName)
+	escapedContent := url.QueryEscape(content)
+	// Chuẩn VietQR Quicklink compact2
+	return fmt.Sprintf(
+		"https://img.vietqr.io/image/%s-%s-compact2.png?amount=%d&addInfo=%s&accountName=%s",
+		bankCode, bankAccount, amount, escapedContent, escapedName,
+	)
+}
+```
+
+---
+
+### F. Khế Ước REST JSON API Tương Thích 1:1 Với React SPA
+Các endpoint Go cần phục vụ để chạy trực tiếp với `frontend/`:
+1. `GET /api/v1/purchasing/bootstrap` $\rightarrow$ Trả về danh sách đơn mua, nhà cung cấp, thống kê nợ và việc cần làm (`AttentionQueue`).
+2. `POST /api/v1/purchasing/orders/:id/receive` $\rightarrow$ Nhập `actual_qty`, `returned_qty`, `actual_rate`. Tự động tính `actual_total`, cập nhật `Price Log` và `per_received`.
+3. `POST /api/v1/purchasing/orders/:id/review` $\rightarrow$ Thu mua chốt công nợ (`purchasing_reviewed = 1`), chuyển đơn sang giai đoạn chờ duyệt chi.
+4. `POST /api/v1/purchasing/orders/approve-batch` $\rightarrow$ Body: `{"orders": ["PO-01", "PO-02"]}`. Quản lý duyệt chi (`payment_approved = 1`).
+5. `GET /api/v1/purchasing/debt-list` $\rightarrow$ Trả về bảng công nợ phân loại: `overdue`, `due_soon`, `unpaid`, `paid_missing_vat`, `settled` kèm URL VietQR tương ứng.
+6. `POST /api/v1/purchasing/pay` & `POST /api/v1/purchasing/batch-pay` $\rightarrow$ Xác nhận thanh toán, đính kèm ảnh UNC, trừ `outstanding_amount`.
+
+---
+
+## 6. Bài Học Thẩm Định Thực Địa & Bằng Chứng Âm (Negative Evidence Trap)
+
+Khi phân tích hoặc trích xuất dữ liệu từ một hệ thống đang vận hành:
+1. **Bẫy dữ liệu Seed/Test (`Administrator` trap):** Luôn kiểm tra trường `owner` và `created_at`. Nếu một loạt record tạo cùng phút bởi `Administrator` kèm file `.txt`, đó là test script của lập trình viên, tuyệt đối không được nhầm là giao dịch thật của người dùng.
+2. **Kênh đầu vào gốc (Input Stream Grounding):** Đọc bảng dữ liệu cuối (`Purchase Order`) sẽ không thấy được vấn đề bằng việc đọc bảng tin nhắn thô (`chat_message_logs`). Tin nhắn của nhân viên Bếp mới là nơi phản ánh chính xác nhất tên gọi thực tế và chu kỳ sinh đơn mỗi ca.
+3. **Ý nghĩa của Bằng Chứng Âm:** Một hệ thống có đầy đủ tính năng nhưng toàn bộ đơn hàng đều dừng ở `payment_approved = 0` và `paid_amount = 0` không có nghĩa là tính năng bị lỗi, mà là **quy trình thực tế bị đứt gãy ở bước chuyển giao con người** (nhân viên quên bấm nút nhận hàng $\rightarrow$ đơn kẹt ở `Draft` $\rightarrow$ màn hình của sếp bị trống $\rightarrow$ quay lại gửi email thủ công).
+
+---
+
+## 7. Related Links & Notes
 - [Ngon Ngon Catering: Cẩm Nang Nghiệp Vụ Vận Hành Thực Địa & Kiến Trúc Core](ngonngon-catering-domain-and-architecture-handbook.md)
 - [Receipt bền vững: retry an toàn không đồng nghĩa exactly-once](../architecture/durable-tool-receipts-and-delivery-ambiguity.md)
+
