@@ -5,7 +5,7 @@
 ---
 
 ## 🏷️ Tag Cloud
-`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice` • `#fnb-restaurant` • `#p2p-procurement` • `#kitchen-zero-leakage` • `#price-volatility` • `#einvoice-tt78` • `#vietqr`
+`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#browser-fingerprint` • `#network-sniffing` • `#playwright` • `#print-containment` • `#spa-flakiness` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice` • `#fnb-restaurant` • `#p2p-procurement` • `#kitchen-zero-leakage` • `#price-volatility` • `#einvoice-tt78` • `#vietqr`
 
 ---
 
@@ -16,6 +16,8 @@
   * *Keywords:* 1,150 PRs trong 4 ngày, rào chắn lint rule, cấm comment code, headless bot playtesting.
 * [Reverse Engineering SaaS Internal API & Bypassing Immutable Constraints](entries/agentic-workflows/reverse-engineering-saas-api-bypassing-immutable-constraints.md)
   * *Keywords:* Trích xuất cookie từ trình duyệt đang mở, dịch ngược SPA JS bundle, lách rào cản immutable IAM email & giới hạn quota license SaaS.
+* [Browser Engine Matching, In-Flight Network Sniffing & 1-Page A4 Print Containment](entries/agentic-workflows/browser-engine-matching-and-network-sniffing.md)
+  * *Keywords:* Đồng bộ browser engine khi nạp cookie Google, headed UI kết hợp passive network sniffer bắt file PDF trên đường truyền, kỹ thuật khóa trần trang in ấn A4 (1-page containment), login guard Zalo Web.
 
 * [Trợ lý cá nhân phải giảm công điều phối của người dùng](entries/agentic-workflows/attention-first-personal-assistant.md)
   * *Keywords:* hội thoại tự nhiên, host sở hữu task, quyết định đang chờ, giới hạn của bản local.
