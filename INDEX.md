@@ -5,7 +5,7 @@
 ---
 
 ## 🏷️ Tag Cloud
-`#agentic-workflow` • `#reverse-engineering` `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture`
+`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5`
 
 ---
 
@@ -17,10 +17,21 @@
 * [Reverse Engineering SaaS Internal API & Bypassing Immutable Constraints](entries/agentic-workflows/reverse-engineering-saas-api-bypassing-immutable-constraints.md)
   * *Keywords:* Trích xuất cookie từ trình duyệt đang mở, dịch ngược SPA JS bundle, lách rào cản immutable IAM email & giới hạn quota license SaaS.
 
+* [Trợ lý cá nhân phải giảm công điều phối của người dùng](entries/agentic-workflows/attention-first-personal-assistant.md)
+  * *Keywords:* hội thoại tự nhiên, host sở hữu task, quyết định đang chờ, giới hạn của bản local.
+* [Agent dừng chạy không có nghĩa là task đã hoàn tất](entries/agentic-workflows/task-completion-needs-independent-evidence.md)
+  * *Keywords:* `agent_settled`, verifier chỉ đọc, hash do host tính, bằng chứng âm, kiểm tra sau cleanup.
+* [Bộ nhớ của agent cần nguồn đối chiếu, không chỉ câu tóm tắt](entries/agentic-workflows/source-backed-agent-memory.md)
+  * *Keywords:* nhánh session đang hoạt động, snapshot bất biến, provenance, SQLite FTS5, truy xuất có giới hạn.
+
 ### 2. ⚡ Performance & Systems
 * *(Đang tổng hợp từ case study tibo.dog: Zero-Allocation Hot Path với hậu tố `.hot.ts`)*
 
 ### 3. 📐 Formal Methods & Architecture
+* [Sở hữu vòng đời worker, không chỉ giữ PID](entries/architecture/worker-process-ownership-and-recovery.md)
+  * *Keywords:* Linux guardian, readiness, process group, parent chết, pipe bị giữ, identity khi recovery; không phải sandbox.
+* [Receipt bền vững: retry an toàn không đồng nghĩa exactly-once](entries/architecture/durable-tool-receipts-and-delivery-ambiguity.md)
+  * *Keywords:* immutable call identity, prepared receipt, hai database, outbox mơ hồ, phân loại reminder.
 * *(Đang tổng hợp: Ứng dụng TLA+ model checking cho game state machines & transaction flows)*
 
 ### 4. 🎨 Web Creative & Procedural Generation
