@@ -5,7 +5,7 @@
 ---
 
 ## 🏷️ Tag Cloud
-`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5`
+`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice`
 
 ---
 
@@ -28,6 +28,8 @@
 * *(Đang tổng hợp từ case study tibo.dog: Zero-Allocation Hot Path với hậu tố `.hot.ts`)*
 
 ### 3. 📐 Formal Methods & Architecture
+* [Ngon Ngon Catering: Cẩm Nang Nghiệp Vụ Vận Hành Thực Địa & Kiến Trúc Core (Zero-Frappe)](entries/architecture/ngonngon-catering-domain-and-architecture-handbook.md)
+  * *Keywords:* BEO dán tường bếp (zero-financial), Zalo Copilot UI, định giá tiền line_v2 (VND integer), 3-way matching mua hàng, 12 bước an toàn HĐĐT KiotViet, chuyển dịch sang Pure Go (`go-ngonngon-admin`).
 * [Sở hữu vòng đời worker, không chỉ giữ PID](entries/architecture/worker-process-ownership-and-recovery.md)
   * *Keywords:* Linux guardian, readiness, process group, parent chết, pipe bị giữ, identity khi recovery; không phải sandbox.
 * [Receipt bền vững: retry an toàn không đồng nghĩa exactly-once](entries/architecture/durable-tool-receipts-and-delivery-ambiguity.md)
