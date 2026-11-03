@@ -5,7 +5,7 @@
 ---
 
 ## 🏷️ Tag Cloud
-`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice`
+`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice` • `#fnb-restaurant` • `#p2p-procurement` • `#kitchen-zero-leakage` • `#price-volatility` • `#einvoice-tt78` • `#vietqr`
 
 ---
 
@@ -34,6 +34,8 @@
   * *Keywords:* Linux guardian, readiness, process group, parent chết, pipe bị giữ, identity khi recovery; không phải sandbox.
 * [Receipt bền vững: retry an toàn không đồng nghĩa exactly-once](entries/architecture/durable-tool-receipts-and-delivery-ambiguity.md)
   * *Keywords:* immutable call identity, prepared receipt, hai database, outbox mơ hồ, phân loại reminder.
+* [Vận Hành Mua Hàng & Thanh Toán Nhà Hàng (F&B Restaurant P2P): Quy Trình Thực Địa, Đối Soát 3 Bên & Kiến Trúc Xử Lý Ngoại Lệ](entries/architecture/fnb-restaurant-p2p-procurement-and-settlement.md)
+  * *Keywords:* 3 ô độc lập (nhận hàng - hóa đơn - thanh toán), kitchen zero-leakage, bóc tách XML TT78 tất định, xử lý trả hàng tại chỗ, price log tự động, duyệt chi VietQR 2 tầng, quản lý nợ HĐ VAT sau thanh toán (`paid_missing_vat`).
 * *(Đang tổng hợp: Ứng dụng TLA+ model checking cho game state machines & transaction flows)*
 
 ### 4. 🎨 Web Creative & Procedural Generation
