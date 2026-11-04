@@ -5,7 +5,7 @@
 ---
 
 ## 🏷️ Tag Cloud
-`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#browser-fingerprint` • `#network-sniffing` • `#playwright` • `#print-containment` • `#spa-flakiness` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice` • `#fnb-restaurant` • `#p2p-procurement` • `#kitchen-zero-leakage` • `#price-volatility` • `#einvoice-tt78` • `#vietqr` • `#pos-lifecycle` • `#pre-bill` • `#stale-detection` • `#shift-handover`
+`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#browser-fingerprint` • `#network-sniffing` • `#playwright` • `#print-containment` • `#spa-flakiness` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice` • `#fnb-restaurant` • `#p2p-procurement` • `#kitchen-zero-leakage` • `#price-volatility` • `#einvoice-tt78` • `#vietqr` • `#pos-lifecycle` • `#pre-bill` • `#stale-detection` • `#shift-handover` • `#harness-engineering` • `#negative-transfer` • `#self-evolution` • `#pruning`
 
 ---
 
@@ -25,9 +25,10 @@
   * *Keywords:* `agent_settled`, verifier chỉ đọc, hash do host tính, bằng chứng âm, kiểm tra sau cleanup.
 * [Bộ nhớ của agent cần nguồn đối chiếu, không chỉ câu tóm tắt](entries/agentic-workflows/source-backed-agent-memory.md)
   * *Keywords:* nhánh session đang hoạt động, snapshot bất biến, provenance, SQLite FTS5, truy xuất có giới hạn.
+* [Retrospective Harness Adaptation & Negative Transfer: Đánh Giá Thực Nghiệm Tự Tiến Hóa Agent](entries/agentic-workflows/retrospective-harness-adaptation-and-negative-transfer.md)
+  * *Keywords:* Thuế harness (+198% latency), bẫy danh sách lỗi dở dang (false regression panic), đề xuất prior-driven vs experience-driven, chu trình canary-evaluate-prune.
 
 ### 2. ⚡ Performance & Systems
-* *(Đang tổng hợp từ case study tibo.dog: Zero-Allocation Hot Path với hậu tố `.hot.ts`)*
 
 ### 3. 📐 Formal Methods & Architecture
 * [Ngon Ngon Catering: Cẩm Nang Nghiệp Vụ Vận Hành Thực Địa & Kiến Trúc Core (Zero-Frappe)](entries/architecture/ngonngon-catering-domain-and-architecture-handbook.md)
@@ -40,10 +41,7 @@
   * *Keywords:* 3 ô độc lập (nhận hàng - hóa đơn - thanh toán), kitchen zero-leakage, PR triage workbench (chặn đơn vô lý/sửa số lượng), dự trù dòng tiền theo giá gần nhất, cold-start món mới giá 0đ, bóc tách XML TT78 tất định, xử lý trả hàng tại chỗ, price log tự động, duyệt chi VietQR 2 tầng, quản lý nợ HĐ VAT sau thanh toán (`paid_missing_vat`).
 * [Quản Lý Vòng Đời Tạm Tính POS Nhà Hàng: Nhận Diện Trực Quan & Cơ Chế Bắt Lệch Bill Thực Địa (Stale Pre-Bill Drift)](entries/architecture/fnb-pos-pre-bill-lifecycle-and-stale-drift-detection.md)
   * *Keywords:* Bộ ba trạng thái tạm tính, phân biệt pre-bill vs settled invoice, thuật toán bắt lệch bill stale drift tự động, visual semantics đa điểm (floor plan, quick switch bar, cart panel), bảo toàn qua giao ca & offline-first.
-* *(Đang tổng hợp: Ứng dụng TLA+ model checking cho game state machines & transaction flows)*
-
 ### 4. 🎨 Web Creative & Procedural Generation
-* *(Đang tổng hợp: Web Audio Live Chiptune Synthesis & Code-Only Pixel Art Atlas)*
 
 ---
 
