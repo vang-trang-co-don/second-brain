@@ -63,6 +63,19 @@ Thứ tự thực thi hoàn toàn tự do:
 
 ---
 
+### B1. Thẩm Định Yêu Cầu Mua Hàng & Lớp Can Thiệp Thu Mua (PR Triage & Editing)
+- **Lý do thực địa:** Bếp nhắn tin trong giờ vận hành cao điểm rất dễ gõ nhầm số lượng (ví dụ: cần 100 quả trứng nhưng gõ nhầm 1000 quả, hoặc gõ thừa số 0). Nếu hệ thống hoặc bot tự động chuyển PR thành PO gửi nhà cung cấp mà không qua kiểm duyệt, nhà hàng sẽ gánh chịu lượng hàng thừa khổng lồ gây hỏng hóc và đóng băng vốn lưu động.
+- **Cơ chế kiểm soát tại Workbench Gom đơn:**
+  - Bot chỉ bóc tách tin nhắn chat và lưu vào danh sách đề xuất (Draft Intake Lines), tuyệt đối không tự động phát hành PO chính thức.
+  - Nhân viên Thu mua đóng vai trò người gác cổng (Gatekeeper) với đầy đủ 4 quyền can thiệp trước khi tạo PO:
+    1. **Sửa số lượng:** Điều chỉnh trực tiếp số lượng vô lý (ví dụ: từ 1000 quả về 100 quả trứng).
+    2. **Đổi món / Ghép mã:** Chuẩn hóa lại mã hàng nếu Bếp dùng từ lóng chưa có trong từ điển Alias.
+    3. **Hoãn (Defer):** Đưa món chưa cần gấp sang danh sách "Chờ mua sau" để gom vào các đợt tiếp theo.
+    4. **Xóa / Từ chối (Reject):** Hủy dòng yêu cầu nếu kiểm tra thấy kho mát vẫn còn đủ lượng tồn kho an toàn.
+  - Chỉ khi Thu mua xác nhận danh sách hợp lệ và bấm "Tạo PO", hệ thống mới phân tách thành các PO gửi nhà cung cấp.
+
+---
+
 ### C. Xử Lý Trả Hàng & Hao Hụt Ngay Cửa Kho (Direct Return at Door)
 - Khi nhà cung cấp giao hàng, nhân viên kiểm đếm và ghi nhận trực tiếp trên giao diện nhận hàng:
   - `actual_qty`: Số lượng thực nhận đạt chuẩn giữ lại dùng.
@@ -87,11 +100,19 @@ Hệ thống xử lý song song hai định dạng chứng từ với độ chí
 
 ---
 
-### E. Ghi Vết Biến Động Giá Tức Thì (`Price Log`) & Cập Nhật Giá Forecast
-- Giá nông sản, thực phẩm tươi sống biến động hàng ngày theo thị trường.
-- Khi nhận hàng, nếu đơn giá thực tế (`actual_rate`) trên phiếu giao lệch so với đơn giá dự tính ban đầu (`rate`):
-  - Hệ thống ghi một dòng kiểm toán vào `tabPrice Log` gồm: `item_code`, `old_rate`, `new_rate`, tỷ lệ chênh lệch `change_pct`, nguồn chứng từ `source_ref`.
-  - Tự động cập nhật `Item.buying_price` mới nhất vào danh mục để lần đặt hàng tiếp theo tự động áp dụng đơn giá thị trường chuẩn.
+### E. Ghi Vết Biến Động Giá Tức Thì (`Price Log`), Dự Trù Dòng Tiền & Xử Lý Cold Start (Món Mới)
+- **Bản chất thực tế của Đơn giá mua gần nhất:** 
+  - Trong F&B, giá thực phẩm tươi sống biến động liên tục theo ngày và thời giá thị trường. Việc so sánh với đơn giá gần nhất **không nhằm mục đích ngăn chặn nhà cung cấp tăng giá**, mà để **dự trù dòng tiền chi tiêu (Cashflow Forecasting)**: giúp Quản lý và Kế toán biết trước hôm nay sẽ chi khoảng bao nhiêu tiền (`ordered_grand_total`) để chuẩn bị ngân quỹ.
+- **Cơ chế ghi vết biến động giá (`tabPrice Log`):**
+  - Khi nhận hàng, nếu đơn giá thực tế (`actual_rate`) trên phiếu giao lệch so với đơn giá dự tính ban đầu (`rate`):
+    * Hệ thống ghi một dòng kiểm toán vào `tabPrice Log` gồm: `item_code`, `old_rate`, `new_rate`, tỷ lệ chênh lệch `change_pct`, nguồn chứng từ `source_ref`.
+    * Tự động cập nhật `Item.buying_price` mới nhất vào danh mục để lần đặt hàng tiếp theo tự động lấy mốc giá thị trường này.
+- **Xử lý món mới chưa từng mua (Cold Start / Missing Price):**
+  - Khi món hàng chưa có lịch sử mua từ nhà cung cấp: Hệ thống khởi tạo đơn giá dự tính bằng `0 ₫` (`rate = 0`) và gắn nhãn cảnh báo màu vàng "Chưa có giá".
+  - Thu mua có hai lựa chọn xử lý:
+    1. Nhập giá báo trước từ nhà cung cấp (Manual Quote) sau khi gọi điện/nhắn tin hỏi giá.
+    2. Giữ nguyên giá `0 ₫` để gửi PO đặt hàng, và chốt giá thực tế khi nhận hàng kèm phiếu giao.
+  - **Khóa chặn an toàn (Guard Condition):** Hệ thống chặn nút "Duyệt chi" (`payment_approved`) nếu đơn giá thực tế vẫn bằng `0 ₫` (ngoại trừ hàng tặng/hàng bù khuyến mãi có cờ `is_free_item = 1`). Khi đơn hoàn tất, đơn giá thực nhận đầu tiên này tự động trở thành `buying_price` cho các PO kế tiếp.
 
 ---
 
@@ -152,6 +173,14 @@ Dữ liệu khai thác trực tiếp từ Production `nemnem-admin`:
   - `PO-2026-00039`: Bột ngàn lớp Montclair mua lẻ tại Annam Gourmet (Phiếu `SPMH-MH03-10203304`). Tiền hàng `90,000 ₫` $\rightarrow$ Công nợ chốt trả: `97,200 ₫` (8% VAT).
   - `PO-2026-00038`: Gói đồ trang trí Halloween từ Phong Thái (Phiếu `HD-HALLOWEEN-2810`). Tiền hàng `356,000 ₫` $\rightarrow$ Công nợ chốt trả: `384,480 ₫` (8% VAT).
   - `PO-2026-00037`: Ống hút từ Thành Phát Packing (Phiếu `D5408`). Tiền hàng `60,000 ₫` $\rightarrow$ Công nợ chốt trả: `64,800 ₫` (8% VAT).
+
+### Case 5: Bếp gõ nhầm 1000 quả trứng và cơ chế chặn tại PR Triage Workbench
+- **Chứng từ:** Đề xuất mua hàng từ nhóm chat Zalo Bếp ca sáng.
+- **Thực tế:** Nhân viên bếp gõ tin nhắn: *"Trứng gà 1000 quả, hành lá 2kg, dầu ăn 5 lít"*. Nhu cầu thực tế của nhà hàng chỉ là 100 quả trứng dùng trong 2 ngày.
+- **Xử lý:**
+  - Bot intake bóc tách dòng `Trứng gà: qty = 1000` và hiển thị trên màn hình Gom đơn.
+  - Thu mua phát hiện số lượng bất thường so với mức tiêu thụ trung bình, nhấn chỉnh sửa trực tiếp `qty` từ `1000` về `100` ngay tại giao diện Workbench trước khi tạo PO.
+  - Kết quả: Đơn PO gửi NCC Fresh Food chỉ đặt đúng 100 quả trứng. Hệ thống ngăn chặn việc nhập thừa 900 quả trứng gây vỡ, hỏng hóc và tránh lãng phí hơn 2.5 triệu đồng tiền hàng.
 
 ---
 
