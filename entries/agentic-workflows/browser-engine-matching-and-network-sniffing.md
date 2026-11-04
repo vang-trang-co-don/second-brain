@@ -1,6 +1,6 @@
-# Browser Engine Matching, In-Flight Network Sniffing & 1-Page A4 Print Containment
+# Browser Engine Matching, In-Flight Network Sniffing & Zalo Session Guards
 
-> **One-liner:** Khắc phục triệt để lỗi đăng nhập giả (Engine Mismatch khi hijack cookie Google), vượt qua sự bất ổn định của DOM SPA bằng cơ chế bắt tệp nhị phân trên đường truyền (In-Flight Sniffing), và khóa trần chiều dọc trang in ấn A4 (1-Page Containment).
+> **One-liner:** Khắc phục triệt để lỗi đăng nhập giả (Engine Mismatch khi hijack cookie Google), vượt qua sự bất ổn định của DOM SPA bằng cơ chế bắt tệp nhị phân trên đường truyền (In-Flight Sniffing), và phòng chống vòng lặp spam request đăng nhập Zalo qua Login Guard.
 
 ---
 
@@ -8,22 +8,23 @@
 - **Source:** Production Pair-Programming Session (Ngon Ngon Catering Admin & Quotation Ingestion)
 - **Author/Creator:** Cao Quốc Dũng & AI Assistant
 - **Captured Date:** 2026-11-03
-- **Tags:** `#agentic-workflow` `#session-hijacking` `#browser-fingerprint` `#network-sniffing` `#playwright` `#print-containment` `#spa-flakiness`
+- **Tags:** `#agentic-workflow` `#session-hijacking` `#browser-fingerprint` `#network-sniffing` `#playwright` `#spa-flakiness` `#session-guard`
 - **Category:** `agentic-workflows`
 
 ---
 
 ## 1. The Core Idea (Ý Tưởng Cốt Lõi)
 
-Khi xây dựng các Agent tự động hóa tương tác với các ứng dụng Web phức tạp (Google Workspace/Gmail, Zalo Web, và Công cụ in ấn BEO/Quotation), kỹ sư rất dễ mắc phải 3 cái bẫy kinh điển:
+Khi xây dựng các Agent tự động hóa tương tác với các ứng dụng Web phức tạp (Google Workspace/Gmail, Zalo Web), kỹ sư rất dễ mắc phải 2 cái bẫy kinh điển:
 1. **Bẫy lệch Engine khi trích xuất Cookie (Engine Mismatch):** Trích xuất `cookies.sqlite` từ profile Firefox thật nhưng lại nạp vào Chromium của Playwright $\rightarrow$ Google nhận diện chữ ký TLS/User-Agent sai lệch, lập tức đá văng session sang trang `accountchooser` và báo `Signed out`.
 2. **Bẫy mò mẫm DOM trên các Single Page App (SPA DOM Flakiness):** Bắt Agent dùng `click()`, `getByText()` để tìm và tải file đính kèm trên giao diện Gmail $\rightarrow$ Liên tục dính lỗi `TimeoutError: 30000ms exceeded`, DOM động bị render lại (`element was detached from DOM`), và popup tải file của trình duyệt bị chặn.
-3. **Bẫy tràn trang in ấn (Print Overflow):** Xuất bản in dán tường bếp (BEO) bị lòi sang trang thứ 2 do thiếu quy hoạch ngân sách chiều dọc (Vertical Budgeting), gây thất lạc thông tin khi đầu bếp dán lên tường.
 
 **Giải pháp đột phá:**
 * Khớp đúng Engine trình duyệt (`firefox.launch`) khi nạp cookie Firefox.
 * Kết hợp **Giao diện trực tiếp (`headless: false` trên `DISPLAY=:0`)** với **Network Sniffer chạy ngầm**: Người dùng thao tác tự nhiên trên màn hình, còn Agent chặn bắt trực tiếp dữ liệu binary (PDF) ngay trên luồng truyền tải HTTP (`page.on('response')`) dựa vào `Content-Disposition` và MIME type, không cần đụng vào bất kỳ nút bấm UI nào.
-* Áp dụng quy tắc khóa trần `.page-container { max-height: 284mm; overflow: hidden; page-break-inside: avoid; }` đảm bảo 100% bản in luôn nằm trọn trong đúng 1 trang A4 portrait.
+* Áp dụng **Login Guard (Exit Code 78)** khi khởi tạo session Zalo qua systemd để chặn triệt để vòng lặp spam request khóa tài khoản.
+
+*(Lưu ý về in ấn BEO A4: Quy chuẩn khóa trần trang in A4 và ngân sách chiều dọc được quản lý tập trung tại [Ngon Ngon Catering Handbook](../architecture/ngonngon-catering-domain-and-architecture-handbook.md).)*
 
 ---
 
@@ -58,16 +59,7 @@ Thay vì bắt Agent vật lộn với các element selector phức tạp, modal
    ```
 3. Người dùng hoặc Agent chỉ cần mở luồng email hoặc click xem trước $\rightarrow$ Network request gửi URL đính kèm từ CDN Google (`mail-attachment.googleusercontent.com`) $\rightarrow$ Listener chặn và lưu binary hoàn chỉnh về đĩa cứng với tỷ lệ thành công 100%.
 
-### 2.3. Quy Hoạch Ngân Sách Chiều Dọc Khóa Tròn Trang In A4 (1-Page Print Containment)
-- Chiều cao vật lý của khổ giấy A4 là 297mm (~1122px). Trừ lề in ấn 6mm–8mm, chiều cao khả dụng là **284mm** (~1070px).
-- **Nguyên nhân tràn trang:** Phần đầu hành chính dài (7 hàng dọc) tốn mất 160px; khi thực đơn có trên 10 món (Bento 3 menu, Buffet 12 món), tổng chiều cao vượt quá 1070px và tràn sang trang 2.
-- **Quy tắc thiết kế bất biến:**
-  1. **Thu hẹp lề in:** `@page { size: A4 portrait; margin: 6mm 8mm; }`.
-  2. **Khóa trần cứng:** `.page-container { max-height: 284mm; overflow: hidden; page-break-inside: avoid; }`.
-  3. **Nén tỷ lệ phần đầu:** Giảm độ đệm của bảng header (`padding: 1px 4px`), dành tới 70% chiều cao trang giấy cho 2 cột Món ăn và Đồ uống.
-  4. **Kiểm thử tự động bằng Playwright:** Dùng script xuất PDF thật để đo số lượng trang `/Type /Page` trong buffer PDF nhị phân, bảo đảm toàn bộ các ca tiệc đều có số trang đúng bằng 1.
-
-### 2.4. Đăng Nhập Zalo Web (zca-js): Terminal Tương Tác vs Systemd
+### 2.3. Đăng Nhập Zalo Web (zca-js): Terminal Tương Tác vs Systemd
 - **Bẫy:** Chạy script tạo mã QR qua `systemd` chạy ngầm. Mã QR sinh ra lưu vào `/run/...`, không ai thấy để quét; sau 90s QR hết hạn dẫn đến vòng lặp xin cấp mã mới liên tục $\rightarrow$ Zalo khóa tài khoản vì spam request.
 - **Quy tắc an toàn:**
   - Không bao giờ chạy đăng nhập Zalo lần đầu qua service ngầm.

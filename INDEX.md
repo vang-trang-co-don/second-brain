@@ -16,8 +16,8 @@
   * *Keywords:* 1,150 PRs trong 4 ngày, rào chắn lint rule, cấm comment code, headless bot playtesting.
 * [Reverse Engineering SaaS Internal API & Bypassing Immutable Constraints](entries/agentic-workflows/reverse-engineering-saas-api-bypassing-immutable-constraints.md)
   * *Keywords:* Trích xuất cookie từ trình duyệt đang mở, dịch ngược SPA JS bundle, lách rào cản immutable IAM email & giới hạn quota license SaaS.
-* [Browser Engine Matching, In-Flight Network Sniffing & 1-Page A4 Print Containment](entries/agentic-workflows/browser-engine-matching-and-network-sniffing.md)
-  * *Keywords:* Đồng bộ browser engine khi nạp cookie Google, headed UI kết hợp passive network sniffer bắt file PDF trên đường truyền, kỹ thuật khóa trần trang in ấn A4 (1-page containment), login guard Zalo Web.
+* [Browser Engine Matching, In-Flight Network Sniffing & Zalo Session Guards](entries/agentic-workflows/browser-engine-matching-and-network-sniffing.md)
+  * *Keywords:* Đồng bộ browser engine khi nạp cookie Google, headed UI kết hợp passive network sniffer bắt file PDF trên đường truyền, login guard Zalo Web chặn loop systemd.
 
 * [Trợ lý cá nhân phải giảm công điều phối của người dùng](entries/agentic-workflows/attention-first-personal-assistant.md)
   * *Keywords:* hội thoại tự nhiên, host sở hữu task, quyết định đang chờ, giới hạn của bản local.
@@ -32,7 +32,7 @@
 
 ### 3. 📐 Formal Methods & Architecture
 * [Ngon Ngon Catering: Cẩm Nang Nghiệp Vụ Vận Hành Thực Địa & Kiến Trúc Core (Zero-Frappe)](entries/architecture/ngonngon-catering-domain-and-architecture-handbook.md)
-  * *Keywords:* BEO dán tường bếp (zero-financial), Zalo Copilot UI, định giá tiền line_v2 (VND integer), 3-way matching mua hàng, 12 bước an toàn HĐĐT KiotViet, chuyển dịch sang Pure Go (`go-ngonngon-admin`).
+  * *Keywords:* BEO dán tường bếp (zero-financial), khóa trần trang in ấn A4 (1-page containment), Zalo Copilot UI, định giá tiền line_v2 (VND integer), chuyển dịch sang Pure Go (`go-ngonngon-admin`).
 * [Sở hữu vòng đời worker, không chỉ giữ PID](entries/architecture/worker-process-ownership-and-recovery.md)
   * *Keywords:* Linux guardian, readiness, process group, parent chết, pipe bị giữ, identity khi recovery; không phải sandbox.
 * [Receipt bền vững: retry an toàn không đồng nghĩa exactly-once](entries/architecture/durable-tool-receipts-and-delivery-ambiguity.md)
