@@ -5,7 +5,7 @@
 ---
 
 ## 🏷️ Tag Cloud
-`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#browser-fingerprint` • `#network-sniffing` • `#playwright` • `#print-containment` • `#spa-flakiness` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice` • `#fnb-restaurant` • `#p2p-procurement` • `#kitchen-zero-leakage` • `#price-volatility` • `#einvoice-tt78` • `#vietqr` • `#pos-lifecycle` • `#pre-bill` • `#stale-detection` • `#shift-handover` • `#harness-engineering` • `#negative-transfer` • `#self-evolution` • `#pruning`
+`#agentic-workflow` • `#reverse-engineering` • `#api-sniffing` • `#saas-constraints` • `#browser-fingerprint` • `#network-sniffing` • `#playwright` • `#print-containment` • `#spa-flakiness` • `#performance` • `#zero-alloc` • `#tla-plus` • `#game-dev` • `#headless-playtesting` • `#procedural-audio` • `#architecture` • `#personal-assistant` • `#human-attention` • `#verification` • `#acceptance-evidence` • `#failure-injection` • `#process-supervision` • `#crash-recovery` • `#idempotency` • `#outbox` • `#delivery-ambiguity` • `#agent-memory` • `#provenance` • `#retrieval` • `#sqlite-fts5` • `#catering-domain` • `#beo-workflow` • `#money-line-v2` • `#zero-frappe` • `#golang` • `#3-way-matching` • `#kiotviet-einvoice` • `#fnb-restaurant` • `#p2p-procurement` • `#kitchen-zero-leakage` • `#price-volatility` • `#einvoice-tt78` • `#vietqr` • `#pos-lifecycle` • `#pre-bill` • `#stale-detection` • `#shift-handover` • `#harness-engineering` • `#negative-transfer` • `#self-evolution` • `#pruning` • `#ui-ux` • `#b2b-saas` • `#design-systems` • `#frontend-architecture` • `#optimistic-ui` • `#shadcn-ui`
 
 ---
 
@@ -43,6 +43,8 @@
   * *Keywords:* Bộ ba trạng thái tạm tính, phân biệt pre-bill vs settled invoice, thuật toán bắt lệch bill stale drift tự động, visual semantics đa điểm (floor plan, quick switch bar, cart panel), bảo toàn qua giao ca & offline-first.
 * [Kiến Trúc Quản Lý Kho & Vòng Đời Tồn Kho F&B: Định Lượng Món (BOM), Cân Bằng Kho & Đối Soát Chuỗi](entries/architecture/fnb-inventory-stocktake-and-bom-lifecycle.md)
   * *Keywords:* BOM công thức món, khấu trừ tự động khi chốt bill, kiểm kho 3 trạng thái (Stocktake), Moving Average Cost (MAC), chênh lệch chuyển kho liên chi nhánh, xử lý bán âm kho.
+* [Triết Lý Thiết Kế & Công Thức Kỹ Thuật UI/UX B2B SaaS Tốc Độ Cao (Linear, Base.vn, Raycast, Plane)](entries/architecture/b2b-saas-ui-ux-design-heuristics-and-engineering-patterns.md)
+  * *Keywords:* Ngưỡng Doherty (<100ms), Progressive Disclosure, Side-over Drawer, Data table right-align numbers tabular-nums, Optimistic UI rollback Sonner, Keyboard ergonomics Cmd+K Esc, Shadcn Tailwind cheat-sheet.
 ### 4. 🎨 Web Creative & Procedural Generation
 
 ---
