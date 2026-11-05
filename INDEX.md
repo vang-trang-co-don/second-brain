@@ -41,6 +41,8 @@
   * *Keywords:* 3 ô độc lập (nhận hàng - hóa đơn - thanh toán), kitchen zero-leakage, PR triage workbench (chặn đơn vô lý/sửa số lượng), dự trù dòng tiền theo giá gần nhất, cold-start món mới giá 0đ, bóc tách XML TT78 tất định, xử lý trả hàng tại chỗ, price log tự động, duyệt chi VietQR 2 tầng, quản lý nợ HĐ VAT sau thanh toán (`paid_missing_vat`).
 * [Quản Lý Vòng Đời Tạm Tính POS Nhà Hàng: Nhận Diện Trực Quan & Cơ Chế Bắt Lệch Bill Thực Địa (Stale Pre-Bill Drift)](entries/architecture/fnb-pos-pre-bill-lifecycle-and-stale-drift-detection.md)
   * *Keywords:* Bộ ba trạng thái tạm tính, phân biệt pre-bill vs settled invoice, thuật toán bắt lệch bill stale drift tự động, visual semantics đa điểm (floor plan, quick switch bar, cart panel), bảo toàn qua giao ca & offline-first.
+* [Kiến Trúc Quản Lý Kho & Vòng Đời Tồn Kho F&B: Định Lượng Món (BOM), Cân Bằng Kho & Đối Soát Chuỗi](entries/architecture/fnb-inventory-stocktake-and-bom-lifecycle.md)
+  * *Keywords:* BOM công thức món, khấu trừ tự động khi chốt bill, kiểm kho 3 trạng thái (Stocktake), Moving Average Cost (MAC), chênh lệch chuyển kho liên chi nhánh, xử lý bán âm kho.
 ### 4. 🎨 Web Creative & Procedural Generation
 
 ---
