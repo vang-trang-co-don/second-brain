@@ -70,40 +70,47 @@ $\rightarrow$ Xem chi tiết tại: [Vận Hành Mua Hàng & Thanh Toán Nhà H�
 
 ## 3. Actionable Application (Bản Đồ Kế Thừa Sang `go-ngonngon-admin`)
 
-Khi tiếp tục phát triển `go-ngonngon-admin` (`/home/dungcq/projects/go-ngonngon-admin`), cấu trúc module được kế thừa như sau:
+Khi tiếp tục phát triển `go-ngonngon-admin` (`/home/dungcq/projects/go-ngonngon-admin`), cấu trúc module đã hoàn thiện như sau:
 
 ```
 go-ngonngon-admin/
 ├── cmd/
-│   ├── server/               # HTTP REST & Print Server (:8090)
-│   └── cli/                  # CLI command runner (calc-quote, render-beo)
+│   ├── server/               # HTTP REST, Web Editor, Print & MCP Server (:8090)
+│   └── cli/                  # CLI Runner (calc-quote, render-beo, bridge-quote, mcp)
 ├── pkg/
-│   ├── domain/
-│   │   ├── money.go          # Lõi tính tiền line_v2 (100% VND integer)
-│   │   ├── booking.go        # Struct Booking, Quotation, BEO snapshot (SHA256)
-│   │   └── beo.go            # Operational model
-│   ├── render/
-│   │   └── beo_html.go       # HTML A4 portrait template chuẩn Google Sheets
-│   ├── store/
-│   │   └── store.go          # Thread-safe in-memory + JSON persistence
-│   └── purchasing/           # Sắp tới: PO lifecycle, 3-way matching, VietQR
+│   ├── domain/               # Lõi nghiệp vụ: Booking, Quotation line_v2 (VND integer), BEO SHA-256
+│   ├── qr/                   # Bộ sinh mã VietQR Napas247 động cho tài khoản công ty
+│   ├── render/               # Render HTML A4 BEO, Báo giá có VietQR, Dashboard & Web Editor (/edit)
+│   ├── bridge/               # Cầu nối thực đơn bếp (MenuSessions) sang dòng báo giá thương mại
+│   ├── excel/                # Đọc/ghi bảng tính Excel .xlsx đa sheet (excelize/v2)
+│   ├── sheets/               # Đồng bộ hai chiều Google Sheets API v4 (batchUpdate)
+│   ├── zalo/                 # Ingestion tin nhắn Zalo cá nhân, khử trùng lặp 24h & bóc tách tệp
+│   ├── mcp/                  # Máy chủ MCP chuẩn JSON-RPC 2.0 (stdio & HTTP) cho AI Agent
+│   ├── threads/              # Quản lý nhật ký chat JSONL bất biến
+│   └── store/                # Thread-safe in-memory + JSON persistence
 ├── scripts/
-│   └── verify_app.py         # Verification harness (launch, doctor, drive beo/quote, cleanup)
-└── .agents/skills/verify/    # Project-local verification skill
+│   ├── sync_zalo_history.mjs # Lắng nghe Zalo, tự tải nhị phân PDF/ảnh và đẩy webhook
+│   ├── lint_rules.py         # 18 luật lint tĩnh bảo vệ kiến trúc và print standards
+│   └── verify_app.py         # Verification harness (doctor, drive beo/quote/dashboard/bridge/excel)
+└── .agents/skills/verify/    # Project-local verification skill & feature map
 ```
 
-### Snippet Test BEO Print & Money Parity (CLI)
-```bash
-# 1. Tính thử báo giá chuẩn line_v2
-./bin/go-ngonngon-cli calc-quote --payload '{
-  "lines": [
-    {"line_id": "L1", "description": "Set VIP Cá Hồi", "qty": 10, "unit_price": 3500000, "tax_rate": 8}
-  ],
-  "discount_percentage": 5
-}'
+### Triển Khai Thực Tế Trên VPS nnc.erp
+- **Go Core Service (`/etc/systemd/system/go-ngonngon.service`):** Chạy binary `bin/server` trên cổng `8090`, chỉ chiếm ~3MB RAM, chạy song song độc lập với Frappe (`:18080`) và POS (`:3000`).
+- **Zalo Capture Service (`/etc/systemd/system/zalo-capture.service`):** Chạy script `sync_zalo_history.mjs` với `session.json` (`chmod 600`), tự động tải file nhị phân vào `evidence/media/` và đẩy webhook nội bộ.
+- **Lưu trữ đám mây S3:** Tích hợp Vietnix S3 (`s3://nnc-erp/go-ngonngon/`) để sao lưu session và tài liệu tiệc.
+- **Đấu nối AI Agent:** Cụm Beacon WeClaw (`weclaw-ngonngon-1` trên `:18790`) kết nối trực tiếp với MCP Server qua endpoint nội bộ `http://172.17.0.1:8090/api/mcp`. Agent `booking_manager_copilot` được gán binding trực tiếp với UID của Quản lý (`857989458439277100`).
 
-# 2. Sinh và in trực tiếp form BEO chuẩn A4 portrait
-./bin/go-ngonngon-cli render-beo --out /tmp/beo_test.html
+### Snippet Thao Tác CLI & MCP
+```bash
+# 1. Khởi chạy MCP Server cho AI Agent
+./bin/go-ngonngon-cli mcp
+
+# 2. Cầu nối tự động thực đơn bếp sang báo giá có VietQR
+./bin/go-ngonngon-cli bridge-quote --booking-id CASE-01-RMIT-HN-MULTI-DAY
+
+# 3. Đồng bộ hai chiều với bảng tính BEO Google Sheets
+./bin/go-ngonngon-cli import-beo-excel --file "BEO 10.2026.xlsx"
 ```
 
 ---
