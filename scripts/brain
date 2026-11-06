@@ -428,6 +428,33 @@ def main():
     # Check subcommand
     p_check = subparsers.add_parser("check", help="Verify all entries and declared aspects")
     
+    # Session subcommand
+    p_session = subparsers.add_parser("session", help="Manage and query multi-source session archives (Pi & AGY)")
+    session_sub = p_session.add_subparsers(dest="session_command")
+
+    p_s_ingest = session_sub.add_parser("ingest", help="Ingest raw sessions into catalog")
+    p_s_ingest.add_argument("--source", choices=["pi", "agy", "all"], default="pi", help="Session source (default: pi)")
+    p_s_ingest.add_argument("--force", action="store_true", help="Re-index already processed sessions")
+
+    p_s_list = session_sub.add_parser("list", help="List indexed sessions")
+    p_s_list.add_argument("-w", "--workspace", help="Filter by workspace name")
+    p_s_list.add_argument("-n", "--limit", type=int, default=30, help="Number of items to show")
+    p_s_list.add_argument("--json", action="store_true", help="Output JSON format")
+
+    p_s_search = session_sub.add_parser("search", help="Search sessions using FTS5")
+    p_s_search.add_argument("query", help="Keyword or phrase to search")
+    p_s_search.add_argument("-w", "--workspace", help="Filter by workspace name")
+    p_s_search.add_argument("-n", "--limit", type=int, default=10, help="Max results")
+    p_s_search.add_argument("--json", action="store_true", help="Output JSON format")
+
+    p_s_info = session_sub.add_parser("info", help="Display full capsule for a session")
+    p_s_info.add_argument("session_id", help="Session UUID or prefix")
+
+    p_s_promote = session_sub.add_parser("promote", help="Promote session decisions into a Second Brain draft entry")
+    p_s_promote.add_argument("session_id", help="Session UUID or prefix")
+    p_s_promote.add_argument("--category", choices=["architecture", "agentic-workflows", "performance"], default="architecture")
+    p_s_promote.add_argument("--slug", help="Custom file slug for entry")
+
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
@@ -441,6 +468,185 @@ def main():
         cmd_sync(args, repo_root)
     elif args.command == "check":
         cmd_check(args, repo_root)
+    elif args.command == "session":
+        cmd_session(args, repo_root)
+
+def cmd_session(args, repo_root):
+    from pathlib import Path
+    script_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+    if str(script_dir) not in sys.path:
+        sys.path.insert(0, str(script_dir))
+    from session_engine import PiSessionAdapter, AgySessionAdapter, Distiller, CatalogStore
+
+    if not args.session_command:
+        print("Usage: brain session [ingest|list|search|info|promote] ...")
+        return
+
+    store = CatalogStore(Path(repo_root))
+    distiller = Distiller()
+
+    if args.session_command == "ingest":
+        sources = ["pi"] if args.source == "pi" else (["agy"] if args.source == "agy" else ["pi", "agy"])
+        total_ingested = 0
+
+        for src in sources:
+            adapter = PiSessionAdapter() if src == "pi" else AgySessionAdapter()
+            files = adapter.discover_sessions()
+            print(f"[{src.upper()}] Discovered {len(files)} session files. Processing...")
+
+            for f in files:
+                envelope = adapter.parse_envelope(f)
+                if not envelope:
+                    continue
+
+                existing_hash = store.get_existing_hash(envelope.session_id)
+                if existing_hash == envelope.file_hash and not args.force:
+                    continue
+
+                capsule = distiller.distill(envelope)
+                store.save_capsule(capsule, envelope.file_hash)
+                total_ingested += 1
+
+        idx_file = store.sync_markdown_index()
+        print(f"Done! Ingested/updated {total_ingested} sessions.")
+        print(f"Markdown catalog updated: {idx_file}")
+
+    elif args.session_command == "list":
+        sessions = store.list_sessions(workspace=args.workspace, limit=args.limit)
+        if args.json:
+            print(json.dumps(sessions, indent=2, ensure_ascii=False))
+            return
+
+        print(f"Second Brain Session History ({len(sessions)} shown):")
+        print("-" * 90)
+        for s in sessions:
+            date_str = s["timestamp"][:10] if len(s["timestamp"]) >= 10 else s["timestamp"]
+            cid = s["id"]
+            short_id = cid[:8]
+            src = s["source"]
+            ws = s["workspace"]
+            title = s["semantic_title"]
+            print(f"• [{src:<3}] {date_str} [{ws:<16}] {short_id} -> {title}")
+        print()
+
+    elif args.session_command == "search":
+        results = store.search(args.query, workspace=args.workspace, limit=args.limit)
+        if args.json:
+            print(json.dumps(results, indent=2, ensure_ascii=False))
+            return
+
+        print(f"Search results for \"{args.query}\" ({len(results)} found):")
+        print("-" * 90)
+        for r in results:
+            date_str = r["timestamp"][:10] if len(r["timestamp"]) >= 10 else r["timestamp"]
+            cid = r["id"]
+            short_id = cid[:8]
+            src = r["source"]
+            ws = r["workspace"]
+            title = r["semantic_title"]
+            snip = r.get("snippet", "")
+            print(f"• [{src:<3}] {date_str} [{ws}] ({short_id}) {title}")
+            if snip:
+                print(f"  Match: {snip}")
+            print(f"  Capsule: {r['capsule_path']}")
+            print()
+
+    elif args.session_command == "info":
+        with store.get_conn() as conn:
+            cur = conn.execute("SELECT * FROM sessions WHERE id LIKE ? OR id = ?", (f"{args.session_id}%", args.session_id))
+            row = cur.fetchone()
+            if not row:
+                print(f"Session '{args.session_id}' not found.", file=sys.stderr)
+                sys.exit(1)
+
+            capsule_path = Path(row["capsule_path"])
+            if capsule_path.exists():
+                print(capsule_path.read_text(encoding="utf-8"))
+            else:
+                print(f"Title: {row['semantic_title']}")
+                print(f"Goal: {row['user_goal']}")
+                print(f"Raw: {row['raw_path']}")
+
+    elif args.session_command == "promote":
+        with store.get_conn() as conn:
+            cur = conn.execute("SELECT * FROM sessions WHERE id LIKE ? OR id = ?", (f"{args.session_id}%", args.session_id))
+            row = cur.fetchone()
+            if not row:
+                print(f"Session '{args.session_id}' not found.", file=sys.stderr)
+                sys.exit(1)
+
+        slug = args.slug
+        if not slug:
+            clean_title = re.sub(r"[^\w\s-]", "", row["semantic_title"].lower())
+            slug = re.sub(r"[\s_]+", "-", clean_title).strip("-")[:50]
+        if not slug:
+            slug = f"session-{row['id'][:8]}"
+
+        entry_file = Path(repo_root) / "entries" / args.category / f"{slug}.md"
+        if entry_file.exists():
+            print(f"Error: Target entry '{entry_file}' already exists.", file=sys.stderr)
+            sys.exit(1)
+
+        capsule_path = Path(row["capsule_path"])
+        capsule_body = capsule_path.read_text(encoding="utf-8") if capsule_path.exists() else row["user_goal"]
+
+        date_str = row["timestamp"][:10] if len(row["timestamp"]) >= 10 else datetime.now().strftime("%Y-%m-%d")
+        template = f"""# {row['semantic_title']}
+
+> **One-liner:** Tóm tắt giá trị kỹ thuật cốt lõi được chưng cất từ session {row['id'][:8]} ({row['workspace']}).
+
+---
+
+## Metadata
+- **Source:** Session Archive (`{row['raw_path']}`)
+- **Author/Creator:** Antigravity Session Distiller
+- **Captured Date:** {date_str}
+- **Tags:** `#{row['workspace']}` `#reusable-domain` `#distilled-session`
+- **Category:** `{args.category}`
+
+---
+
+## 1. The Core Idea (Sự Thật Thực Địa & Vấn Đề Cốt Lõi)
+- Vấn đề từ session ban đầu:
+{row['user_goal']}
+
+---
+
+## 2. Key Mechanisms & Patterns (Cơ Chế Chi Tiết)
+{capsule_body}
+
+---
+
+## 3. Real-World Production Cases (Các Tình Huống Thực Tế)
+- Dự án áp dụng: `{row['workspace']}`
+- File liên quan:
+{row.get('raw_path')}
+
+---
+
+## 4. Reconstructability Blueprint (Bản Vẽ Tái Dựng Độc Lập)
+### A. Authoritative Schema & Types
+```sql
+-- Thêm schema cần dùng lại ở đây
+```
+
+### B. Core Logic & Parsers
+```go
+// Code mẫu tái sử dụng
+```
+
+---
+
+## 5. Related Links & Notes
+- Raw Session: `{row['raw_path']}`
+- Session Capsule: `{row['capsule_path']}`
+"""
+        entry_file.parent.mkdir(parents=True, exist_ok=True)
+        entry_file.write_text(template, encoding="utf-8")
+        print(f"Successfully promoted session {row['id'][:8]} to draft entry:")
+        print(f"-> {entry_file}")
+        print("Run `brain sync-manifest` after editing to include in MANIFEST.json.")
+
 
 if __name__ == "__main__":
     main()
