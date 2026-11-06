@@ -1,0 +1,446 @@
+#!/usr/bin/env python3
+"""
+Second Brain JIT Aspect-Sliced Memory Lever.
+Integrates Second Brain knowledge entries with pstack harnesses (/architect, /tdd, /thermos, /reflect).
+"""
+
+import os
+import sys
+import json
+import re
+import glob
+import argparse
+
+def find_repo_root():
+    # Start at script dir's parent
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidate = os.path.dirname(script_dir)
+    if os.path.exists(os.path.join(candidate, "INDEX.md")) and os.path.exists(os.path.join(candidate, "entries")):
+        return candidate
+    # Fallback search upwards
+    cur = os.getcwd()
+    while cur != "/":
+        if os.path.exists(os.path.join(cur, "INDEX.md")) and os.path.exists(os.path.join(cur, "entries")):
+            return cur
+        cur = os.path.dirname(cur)
+    return "/home/dungcq/projects/second-brain"
+
+ALIAS_MAP = {
+    "fnb-pos-pre-bill-lifecycle-and-stale-drift-detection.md": ("fnb-pos", ["pos", "pre-bill", "tạm tính", "in bill", "drift", "giao ca"]),
+    "fnb-restaurant-p2p-procurement-and-settlement.md": ("fnb-restaurant-p2p", ["fnb-p2p", "p2p", "mua hàng", "nhập kho", "hóa đơn vat", "vietqr", "đối soát"]),
+    "fnb-inventory-stocktake-and-bom-lifecycle.md": ("fnb-inventory", ["bom", "stocktake", "kho", "kiểm kho", "định lượng"]),
+    "ngonngon-catering-domain-and-architecture-handbook.md": ("ngonngon-catering", ["beo", "catering", "line_v2", "go-ngonngon"]),
+    "b2b-saas-ui-ux-design-heuristics-and-engineering-patterns.md": ("b2b-saas-ui-ux", ["ui-ux", "b2b-saas", "linear", "keyboard", "sonner"]),
+    "worker-process-ownership-and-recovery.md": ("worker-process-ownership", ["worker", "process-ownership", "linux-guardian", "readiness"]),
+    "durable-tool-receipts-and-delivery-ambiguity.md": ("durable-tool-receipts", ["receipts", "delivery-ambiguity", "outbox", "retry"]),
+    "retrospective-harness-adaptation-and-negative-transfer.md": ("retrospective-harness-adaptation", ["harness-adaptation", "negative-transfer", "harness-tax", "pruning"]),
+    "source-backed-agent-memory.md": ("source-backed-agent-memory", ["agent-memory", "source-backed", "sqlite-fts5"]),
+    "task-completion-needs-independent-evidence.md": ("task-completion-needs-independent-evidence", ["task-completion", "independent-evidence", "verifier"]),
+    "attention-first-personal-assistant.md": ("attention-first-personal-assistant", ["personal-assistant", "attention-first", "telegram"]),
+    "browser-engine-matching-and-network-sniffing.md": ("browser-engine-matching", ["browser-matching", "network-sniffing", "zalo-guard", "headed"]),
+    "reverse-engineering-saas-api-bypassing-immutable-constraints.md": ("reverse-engineering-saas-api", ["reverse-engineering", "spa-sniffing", "session-hijack"]),
+    "poteto-tibo-dog-engineering.md": ("poteto-tibo-dog-engineering", ["poteto", "tibo-dog", "zero-alloc", "tla-plus"])
+}
+
+VALID_ASPECTS = [
+    "invariants",
+    "mechanisms",
+    "cases",
+    "application",
+    "blueprint",
+    "schema",
+    "probes",
+    "links",
+    "all"
+]
+
+ASPECT_ALIASES = {
+    "core": "invariants",
+    "invariant": "invariants",
+    "inv": "invariants",
+    "patterns": "mechanisms",
+    "mechanism": "mechanisms",
+    "mech": "mechanisms",
+    "case": "cases",
+    "edge-cases": "cases",
+    "production-cases": "cases",
+    "app": "application",
+    "actionable": "application",
+    "arch": "blueprint",
+    "reconstructability": "blueprint",
+    "ddl": "schema",
+    "types": "schema",
+    "models": "schema",
+    "anti-regression": "probes",
+    "verification": "probes",
+    "checks": "probes",
+    "related": "links"
+}
+
+def extract_aspect(content, aspect):
+    aspect = aspect.lower()
+    aspect = ASPECT_ALIASES.get(aspect, aspect)
+    lines = content.splitlines()
+    
+    h2_blocks = []
+    cur_h2 = ("preamble", [])
+    for line in lines:
+        if line.startswith("## "):
+            h2_blocks.append(cur_h2)
+            cur_h2 = (line[3:].strip(), [line])
+        else:
+            cur_h2[1].append(line)
+    h2_blocks.append(cur_h2)
+    
+    h3_blocks = []
+    for h2_title, h2_lines in h2_blocks:
+        cur_h3 = None
+        for line in h2_lines:
+            if line.startswith("### "):
+                if cur_h3:
+                    h3_blocks.append(cur_h3)
+                cur_h3 = (line[4:].strip(), [line], h2_title)
+            elif cur_h3:
+                cur_h3[1].append(line)
+        if cur_h3:
+            h3_blocks.append(cur_h3)
+            
+    if aspect == "invariants":
+        for title, blines in h2_blocks:
+            if title.startswith("1.") or "core idea" in title.lower() or "sự thật" in title.lower():
+                return "\n".join(blines).strip()
+    elif aspect == "mechanisms":
+        for title, blines in h2_blocks:
+            if title.startswith("2.") or "mechanisms" in title.lower() or "cơ chế" in title.lower():
+                return "\n".join(blines).strip()
+    elif aspect == "cases":
+        for title, blines in h2_blocks:
+            if "case" in title.lower() or "tình huống" in title.lower():
+                return "\n".join(blines).strip()
+    elif aspect == "application":
+        for title, blines in h2_blocks:
+            if "actionable" in title.lower() or "áp dụng" in title.lower():
+                return "\n".join(blines).strip()
+    elif aspect == "blueprint":
+        for title, blines in h2_blocks:
+            if "blueprint" in title.lower() or "reconstructability" in title.lower() or "tái dựng" in title.lower():
+                return "\n".join(blines).strip()
+    elif aspect == "schema":
+        matches = []
+        for title, blines, parent in h3_blocks:
+            if any(k in title.lower() for k in ["schema", "ddl", "data model", "struct", "typescript model", "state shape"]):
+                matches.append("\n".join(blines).strip())
+        if matches:
+            return "\n\n".join(matches)
+    elif aspect == "probes":
+        matches = []
+        for title, blines, parent in h3_blocks:
+            if any(k in title.lower() for k in ["probe", "anti-regression", "check", "negative evidence"]):
+                matches.append("\n".join(blines).strip())
+        if not matches:
+            for title, blines in h2_blocks:
+                if any(k in title.lower() for k in ["thẩm định", "bằng chứng âm", "negative evidence"]):
+                    matches.append("\n".join(blines).strip())
+        if matches:
+            return "\n\n".join(matches)
+    elif aspect == "links":
+        for title, blines in h2_blocks:
+            if "related links" in title.lower() or "liên kết" in title.lower():
+                return "\n".join(blines).strip()
+    elif aspect == "all":
+        return content.strip()
+        
+    return None
+
+def build_manifest(repo_root):
+    entries_dir = os.path.join(repo_root, "entries")
+    index_file = os.path.join(repo_root, "INDEX.md")
+    
+    index_kw_map = {}
+    if os.path.exists(index_file):
+        with open(index_file, "r", encoding="utf-8") as f:
+            index_content = f.read()
+        pattern = re.compile(r"\*\s+\[(.*?)\]\((.*?)\)\s*\n\s+\*\s+\*Keywords:\*\s*(.*?)(?=\n\*|\n##|\n---|$)", re.DOTALL)
+        for title, path, kw in pattern.findall(index_content):
+            clean_path = path.strip()
+            if clean_path.startswith("./"):
+                clean_path = clean_path[2:]
+            kws = [k.strip().strip("`") for k in kw.split(",") if k.strip()]
+            index_kw_map[clean_path] = kws
+
+    files = sorted(glob.glob(f"{entries_dir}/**/*.md", recursive=True))
+    domains = []
+
+    for f in files:
+        rel_path = os.path.relpath(f, repo_root)
+        filename = os.path.basename(f)
+        with open(f, "r", encoding="utf-8") as fp:
+            content = fp.read()
+            
+        lines = content.splitlines()
+        title = ""
+        one_liner = ""
+        tags = []
+        category = os.path.basename(os.path.dirname(f))
+        
+        for line in lines:
+            if line.startswith("# ") and not title:
+                title = line[2:].strip()
+            m_oneliner = re.match(r"^>\s*\*\*One-liner:\*\*\s*(.*)$", line)
+            if m_oneliner and not one_liner:
+                one_liner = m_oneliner.group(1).strip()
+            m_tags = re.match(r"^-\s*\*\*Tags:\*\*\s*(.*)$", line)
+            if m_tags:
+                tags = [t.strip().lstrip("#") for t in m_tags.group(1).split() if t.startswith("#")]
+                
+        core_invariant = one_liner
+        sec1_match = re.search(r"## 1\..*?\n(.*?)(?=\n## 2|\n---|$)", content, re.DOTALL)
+        if sec1_match:
+            sec1_text = sec1_match.group(1).strip()
+            inv_match = re.search(r"(?:1\.|\-|\*)\s*\*\*(.*?)\*\*(.*?)(?=\n(?:1\.|\-|\*)|\n\n|$)", sec1_text)
+            if inv_match:
+                core_invariant = f"{inv_match.group(1).strip()}: {inv_match.group(2).strip()}"
+            else:
+                first_p = sec1_text.split("\n\n")[0].strip()
+                if first_p:
+                    core_invariant = first_p.replace("\n", " ")[:250]
+                    
+        mapped_id, custom_triggers = ALIAS_MAP.get(filename, (filename.replace(".md", ""), []))
+        triggers = list(set(custom_triggers + [t.lower() for t in tags] + [k.lower() for k in index_kw_map.get(rel_path, [])]))
+        
+        # Determine available aspects
+        available_aspects = ["invariants", "mechanisms", "all"]
+        for asp in ["cases", "application", "blueprint", "schema", "probes", "links"]:
+            if extract_aspect(content, asp) is not None:
+                available_aspects.append(asp)
+            
+        domains.append({
+            "id": mapped_id,
+            "title": title,
+            "category": category,
+            "path": rel_path,
+            "one_liner": one_liner,
+            "core_invariant": core_invariant,
+            "triggers": sorted(triggers),
+            "aspects": sorted(list(set(available_aspects)))
+        })
+
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "version": "1.0.0",
+        "domains": sorted(domains, key=lambda x: x["id"])
+    }
+
+def get_manifest(repo_root):
+    manifest_path = os.path.join(repo_root, "MANIFEST.json")
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    # If not found or invalid, generate on the fly
+    return build_manifest(repo_root)
+
+def find_domains(manifest, query_str):
+    q = query_str.lower().strip()
+    exact_matches = []
+    high_matches = []
+    med_matches = []
+    
+    for d in manifest.get("domains", []):
+        d_id = d["id"].lower()
+        d_triggers = [t.lower() for t in d.get("triggers", [])]
+        d_title = d.get("title", "").lower()
+        d_path = d.get("path", "").lower()
+        
+        if q == d_id:
+            exact_matches.append(d)
+        elif q in d_triggers:
+            high_matches.append(d)
+        elif q in d_id or q in d_path:
+            high_matches.append(d)
+        elif any(q in t for t in d_triggers) or q in d_title:
+            med_matches.append(d)
+            
+    if exact_matches:
+        return exact_matches
+    if high_matches:
+        return high_matches
+    return med_matches
+
+def cmd_query(args, repo_root):
+    manifest = get_manifest(repo_root)
+    matches = find_domains(manifest, args.target)
+    
+    if not matches:
+        print(f"Error: No Second Brain domain found matching '{args.target}'.", file=sys.stderr)
+        print("Run `brain list` to inspect available domains and triggers.", file=sys.stderr)
+        sys.exit(1)
+        
+    if len(matches) > 1 and not args.target == matches[0]["id"]:
+        # Ambiguous query
+        ids = [m["id"] for m in matches]
+        print(f"Notice: Multiple domains matched '{args.target}': {ids}. Slicing primary match '{matches[0]['id']}'.", file=sys.stderr)
+        
+    domain = matches[0]
+    file_path = os.path.join(repo_root, domain["path"])
+    if not os.path.exists(file_path):
+        print(f"Error: Entry file not found at {file_path}", file=sys.stderr)
+        sys.exit(1)
+        
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    aspect = args.aspect.lower()
+    normalized_aspect = ASPECT_ALIASES.get(aspect, aspect)
+    
+    slice_content = extract_aspect(content, normalized_aspect)
+    if slice_content is None:
+        print(f"Error: Aspect '{aspect}' is not available for domain '{domain['id']}'.", file=sys.stderr)
+        print(f"Available aspects: {domain['aspects']}", file=sys.stderr)
+        sys.exit(1)
+        
+    if args.json:
+        out = {
+            "id": domain["id"],
+            "title": domain["title"],
+            "category": domain["category"],
+            "path": domain["path"],
+            "aspect": normalized_aspect,
+            "one_liner": domain.get("one_liner", ""),
+            "core_invariant": domain.get("core_invariant", ""),
+            "content": slice_content
+        }
+        print(json.dumps(out, indent=2, ensure_ascii=False))
+    else:
+        # Markdown presentation
+        print(f"<!-- second-brain-slice domain=\"{domain['id']}\" aspect=\"{normalized_aspect}\" -->")
+        print(f"# [Second Brain] {domain['title']} ({domain['id']})")
+        print(f"> **Category:** {domain['category']} | **Path:** {domain['path']}")
+        if domain.get("one_liner"):
+            print(f"> **One-liner:** {domain['one_liner']}")
+        if domain.get("core_invariant"):
+            print(f"> **Core Invariant:** {domain['core_invariant']}")
+        print("\n" + slice_content)
+
+def cmd_list(args, repo_root):
+    manifest = get_manifest(repo_root)
+    domains = manifest.get("domains", [])
+    
+    if args.category:
+        domains = [d for d in domains if d.get("category") == args.category]
+    if args.aspect:
+        asp = ASPECT_ALIASES.get(args.aspect.lower(), args.aspect.lower())
+        domains = [d for d in domains if asp in d.get("aspects", [])]
+        
+    if args.json:
+        print(json.dumps(domains, indent=2, ensure_ascii=False))
+        return
+        
+    print(f"Second Brain Domains ({len(domains)} registered):")
+    print("-" * 80)
+    for d in domains:
+        print(f"• ID: {d['id']:<35} [{d['category']}]")
+        print(f"  Title: {d['title']}")
+        if d.get("core_invariant"):
+            print(f"  Invariant: {d['core_invariant']}")
+        print(f"  Aspects: {', '.join(d.get('aspects', []))}")
+        triggers = d.get('triggers', [])[:6]
+        print(f"  Triggers: {', '.join(triggers)}")
+        print()
+
+def cmd_sync(args, repo_root):
+    manifest = build_manifest(repo_root)
+    manifest_path = os.path.join(repo_root, "MANIFEST.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+    print(f"Synchronized MANIFEST.json successfully ({len(manifest['domains'])} domains registered).")
+
+def cmd_check(args, repo_root):
+    print("Running Second Brain verification check...")
+    manifest = build_manifest(repo_root)
+    errors = []
+    
+    for d in manifest.get("domains", []):
+        fpath = os.path.join(repo_root, d["path"])
+        if not os.path.exists(fpath):
+            errors.append(f"Domain {d['id']}: missing file {fpath}")
+            continue
+            
+        with open(fpath, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Verify mandatory invariants and mechanisms
+        inv = extract_aspect(content, "invariants")
+        if not inv or len(inv.strip()) < 20:
+            errors.append(f"Domain {d['id']}: invariants section empty or missing.")
+            
+        mech = extract_aspect(content, "mechanisms")
+        if not mech or len(mech.strip()) < 20:
+            errors.append(f"Domain {d['id']}: mechanisms section empty or missing.")
+            
+        # Verify declared aspects
+        for asp in d.get("aspects", []):
+            extracted = extract_aspect(content, asp)
+            if not extracted:
+                errors.append(f"Domain {d['id']}: declared aspect '{asp}' failed to extract.")
+                
+    if errors:
+        print(f"FAILED: {len(errors)} issues discovered:", file=sys.stderr)
+        for err in errors:
+            print(f"  - {err}", file=sys.stderr)
+        sys.exit(1)
+        
+    print(f"PASSED: All {len(manifest['domains'])} domains verified with 100% slice integrity.")
+
+def main():
+    repo_root = find_repo_root()
+    parser = argparse.ArgumentParser(
+        description="Second Brain JIT Aspect-Sliced Memory Lever",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  brain query fnb-pos --aspect invariants
+  brain query fnb-p2p --aspect schema
+  brain query linear --aspect cases
+  brain list --aspect schema
+  brain sync-manifest
+  brain check
+"""
+    )
+    subparsers = parser.add_subparsers(dest="command")
+    
+    # Query subcommand
+    p_query = subparsers.add_parser("query", help="Slice aspect from a Second Brain entry")
+    p_query.add_argument("target", help="Domain ID, trigger, or keyword")
+    p_query.add_argument("-a", "--aspect", default="invariants", help=f"Aspect to extract: {', '.join(VALID_ASPECTS)} (default: invariants)")
+    p_query.add_argument("--json", action="store_true", help="Output slice in JSON format")
+    
+    # List subcommand
+    p_list = subparsers.add_parser("list", help="List all registered domains and triggers")
+    p_list.add_argument("-c", "--category", help="Filter by category")
+    p_list.add_argument("-a", "--aspect", help="Filter by available aspect")
+    p_list.add_argument("--json", action="store_true", help="Output list in JSON format")
+    
+    # Sync subcommand
+    p_sync = subparsers.add_parser("sync-manifest", help="Regenerate MANIFEST.json from entries/")
+    
+    # Check subcommand
+    p_check = subparsers.add_parser("check", help="Verify all entries and declared aspects")
+    
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
+        
+    if args.command == "query":
+        cmd_query(args, repo_root)
+    elif args.command == "list":
+        cmd_list(args, repo_root)
+    elif args.command == "sync-manifest":
+        cmd_sync(args, repo_root)
+    elif args.command == "check":
+        cmd_check(args, repo_root)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,386 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "domains": [
+    {
+      "id": "attention-first-personal-assistant",
+      "title": "Trợ lý cá nhân phải giảm công điều phối của người dùng",
+      "category": "agentic-workflows",
+      "path": "entries/agentic-workflows/attention-first-personal-assistant.md",
+      "one_liner": "Giữ hội thoại tự nhiên ở lớp ngoài; để host quản lý công việc, trạng thái và thông báo ở lớp trong.",
+      "core_invariant": "Trợ lý không đạt mục tiêu nếu người dùng vẫn phải chia ticket và chọn agent. Người dùng còn phải canh tiến độ và kiểm tra lời báo xong. Đích đến là giảm công điều phối, không phải tăng số agent chạy cùng lúc.",
+      "triggers": [
+        "attention-first",
+        "giới hạn của bản local.",
+        "host sở hữu task",
+        "hội thoại tự nhiên",
+        "personal-assistant",
+        "quyết định đang chờ",
+        "telegram"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "b2b-saas-ui-ux",
+      "title": "Triết Lý Thiết Kế & Công Thức Kỹ Thuật UI/UX B2B SaaS Tốc Độ Cao (Linear, Base.vn, Raycast, Plane)",
+      "category": "architecture",
+      "path": "entries/architecture/b2b-saas-ui-ux-design-heuristics-and-engineering-patterns.md",
+      "one_liner": "Bộ cẩm nang thực chiến chắt lọc các nguyên lý tâm lý học nhận thức, kiến trúc phân tầng UI/UX (Table, Drawer, Shortcuts) và stack kỹ thuật \"ăn ngay\" (Local-first, Optimistic UI, Shadcn/Tailwind) giúp B2B SaaS đạt trải nghiệm mượt mà, không gián đoạn ngữ cảnh và triệt tiêu tải nhận thức của người dùng.",
+      "core_invariant": "Giả định sai lầm:: Dev thường nghĩ giao diện \"đẹp và xịn\" là phải có màu sắc bắt mắt, hiệu ứng animation phức tạp, hình minh họa 3D hoặc nhiều biểu đồ đồ sộ.",
+      "triggers": [
+        "b2b-saas",
+        "data table right-align numbers tabular-nums",
+        "keyboard",
+        "keyboard ergonomics cmd+k esc",
+        "linear",
+        "ngưỡng doherty (<100ms)",
+        "optimistic ui rollback sonner",
+        "progressive disclosure",
+        "shadcn tailwind cheat-sheet.",
+        "side-over drawer",
+        "sonner",
+        "ui-ux"
+      ],
+      "aspects": [
+        "all",
+        "blueprint",
+        "cases",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "browser-engine-matching",
+      "title": "Browser Engine Matching, In-Flight Network Sniffing & Zalo Session Guards",
+      "category": "agentic-workflows",
+      "path": "entries/agentic-workflows/browser-engine-matching-and-network-sniffing.md",
+      "one_liner": "Khắc phục triệt để lỗi đăng nhập giả (Engine Mismatch khi hijack cookie Google), vượt qua sự bất ổn định của DOM SPA bằng cơ chế bắt tệp nhị phân trên đường truyền (In-Flight Sniffing), và phòng chống vòng lặp spam request đăng nhập Zalo qua Login Guard.",
+      "core_invariant": "Khi xây dựng các Agent tự động hóa tương tác với các ứng dụng Web phức tạp (Google Workspace/Gmail, Zalo Web), kỹ sư rất dễ mắc phải 2 cái bẫy kinh điển: 1. **Bẫy lệch Engine khi trích xuất Cookie (Engine Mismatch):** Trích xuất `cookies.sqlite` từ p",
+      "triggers": [
+        "browser-matching",
+        "headed",
+        "headed ui kết hợp passive network sniffer bắt file pdf trên đường truyền",
+        "login guard zalo web chặn loop systemd.",
+        "network-sniffing",
+        "zalo-guard",
+        "đồng bộ browser engine khi nạp cookie google"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "durable-tool-receipts",
+      "title": "Receipt bền vững: retry an toàn không đồng nghĩa exactly-once",
+      "category": "architecture",
+      "path": "entries/architecture/durable-tool-receipts-and-delivery-ambiguity.md",
+      "one_liner": "Giữ nguyên danh tính một thao tác qua crash, làm hiệu ứng có tính idempotent và lưu riêng trạng thái không biết chắc đã gửi hay chưa.",
+      "core_invariant": "Một transaction ở database A không bao trùm hiệu ứng đã commit ở database B. Nếu hiệu ứng thành công nhưng receipt chưa được ghi, host có thể không biết lần gọi trước đã làm gì. Chỉ deduplicate hiệu ứng vẫn chưa đủ. Nếu thiếu identity bất biến, cùng ",
+      "triggers": [
+        "delivery-ambiguity",
+        "hai database",
+        "immutable call identity",
+        "outbox",
+        "outbox mơ hồ",
+        "phân loại reminder.",
+        "prepared receipt",
+        "receipts",
+        "retry"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "fnb-inventory",
+      "title": "Kiến Trúc Quản Lý Kho & Vòng Đời Tồn Kho F&B: Định Lượng Món (BOM), Cân Bằng Kho & Đối Soát Chuỗi",
+      "category": "architecture",
+      "path": "entries/architecture/fnb-inventory-stocktake-and-bom-lifecycle.md",
+      "one_liner": "Mô hình kiến trúc quản lý kho F&B chuẩn hóa từ dịch ngược KiotViet FnB kết hợp thực địa Nêm & Nếm: khấu trừ tự động theo công thức BOM, kiểm kho 3 trạng thái (Stocktake), tính giá vốn bình quân di động (MAC) và xử lý chênh lệch chuyển kho liên chi nhánh.",
+      "core_invariant": "Áp dụng quản lý kho sản xuất công nghiệp vào nhà hàng luôn thất bại vì những ngộ nhận kinh điển:",
+      "triggers": [
+        "bom",
+        "bom công thức món",
+        "chênh lệch chuyển kho liên chi nhánh",
+        "kho",
+        "khấu trừ tự động khi chốt bill",
+        "kiểm kho",
+        "kiểm kho 3 trạng thái (stocktake)",
+        "moving average cost (mac)",
+        "stocktake",
+        "xử lý bán âm kho.",
+        "định lượng"
+      ],
+      "aspects": [
+        "all",
+        "blueprint",
+        "cases",
+        "invariants",
+        "links",
+        "mechanisms",
+        "schema"
+      ]
+    },
+    {
+      "id": "fnb-pos",
+      "title": "Quản Lý Vòng Đời Tạm Tính POS Nhà Hàng: Nhận Diện Trực Quan & Cơ Chế Bắt Lệch Bill Thực Địa (Stale Pre-Bill Drift)",
+      "category": "architecture",
+      "path": "entries/architecture/fnb-pos-pre-bill-lifecycle-and-stale-drift-detection.md",
+      "one_liner": "Giải pháp theo dõi trạng thái Phiếu kiểm đồ tạm tính (Pre-bill Check) trên quầy POS offline-first, tự động phát hiện lệch bill khi khách gọi thêm món sau tạm tính và bảo toàn trạng thái qua giao ca.",
+      "core_invariant": "Cái bẫy \"Khách gọi thêm món sau khi cầm phiếu\" (Stale Pre-bill Drift):: Sau khi phục vụ đưa phiếu tạm tính, khách ngồi lại nói chuyện và gọi thêm 1 lon bia, đĩa tráng miệng hoặc xin đổi món. Nếu hệ thống không có cơ chế cảnh báo, thu ngân chỉ nhìn số tiền trên tờ phiếu cũ khách cầm hoặc thu ngân mới vào ca bấm thanh toán theo số cũ, dẫn đến thất thoát tiền hoặc in hoá đơn thiếu món.",
+      "triggers": [
+        "bảo toàn qua giao ca & offline-first.",
+        "bộ ba trạng thái tạm tính",
+        "cart panel)",
+        "drift",
+        "giao ca",
+        "in bill",
+        "phân biệt pre-bill vs settled invoice",
+        "pos",
+        "pre-bill",
+        "quick switch bar",
+        "thuật toán bắt lệch bill stale drift tự động",
+        "tạm tính",
+        "visual semantics đa điểm (floor plan"
+      ],
+      "aspects": [
+        "all",
+        "blueprint",
+        "cases",
+        "invariants",
+        "links",
+        "mechanisms",
+        "schema"
+      ]
+    },
+    {
+      "id": "fnb-restaurant-p2p",
+      "title": "Vận Hành Mua Hàng & Thanh Toán Nhà Hàng (F&B Restaurant P2P): Quy Trình Thực Địa, Đối Soát 3 Bên & Kiến Trúc Xử Lý Ngoại Lệ",
+      "category": "architecture",
+      "path": "entries/architecture/fnb-restaurant-p2p-procurement-and-settlement.md",
+      "one_liner": "Kiến trúc và quy luật nghiệp vụ P2P (Procure-to-Pay) giải quyết triệt để các góc khuất thực tế của nhà hàng Việt Nam: 3 ô độc lập, Kitchen Zero-Leakage, bóc tách hóa đơn VAT TT78 tất định, biến động giá tức thì và duyệt chi VietQR 2 tầng.",
+      "core_invariant": "Triển khai quy trình mua hàng (Procure-to-Pay / P2P) từ các phần mềm ERP truyền thống (như SAP, MISA, ERPNext) vào nhà hàng thường thất bại vì giả định sai về thực tế vận hành tại Việt Nam:",
+      "triggers": [
+        "3 ô độc lập (nhận hàng - hóa đơn - thanh toán)",
+        "bóc tách xml tt78 tất định",
+        "cold-start món mới giá 0đ",
+        "duyệt chi vietqr 2 tầng",
+        "dự trù dòng tiền theo giá gần nhất",
+        "fnb-p2p",
+        "hóa đơn vat",
+        "kitchen zero-leakage",
+        "mua hàng",
+        "nhập kho",
+        "p2p",
+        "pr triage workbench (chặn đơn vô lý/sửa số lượng)",
+        "price log tự động",
+        "quản lý nợ hđ vat sau thanh toán (`paid_missing_vat`).",
+        "vietqr",
+        "xử lý trả hàng tại chỗ",
+        "đối soát"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "blueprint",
+        "cases",
+        "invariants",
+        "links",
+        "mechanisms",
+        "probes",
+        "schema"
+      ]
+    },
+    {
+      "id": "ngonngon-catering",
+      "title": "Ngon Ngon Catering: Cẩm Nang Nghiệp Vụ Vận Hành Thực Địa & Kiến Trúc Core (Zero-Frappe)",
+      "category": "architecture",
+      "path": "entries/architecture/ngonngon-catering-domain-and-architecture-handbook.md",
+      "one_liner": "Toàn bộ bản đồ nghiệp vụ thực chiến của Ngon Ngon Catering (BEO dán tường bếp, Zalo Copilot UI, định giá tiền line_v2, 3-way matching mua hàng, và 12 bước an toàn HĐĐT) để kế thừa và tái thiết kế sang `go-ngonngon-admin`.",
+      "core_invariant": "Xây dựng hệ thống quản trị F&B/Catering thường thất bại vì dev tự ngồi vẽ ra các giả định sai lầm (như bắt bếp cầm tablet quẹt quẹt, hay chia món theo trạm bếp lý thuyết).",
+      "triggers": [
+        "beo",
+        "beo dán tường bếp (zero-financial)",
+        "catering",
+        "chuyển dịch sang pure go (`go-ngonngon-admin`).",
+        "go-ngonngon",
+        "khóa trần trang in ấn a4 (1-page containment)",
+        "line_v2",
+        "zalo copilot ui",
+        "định giá tiền line_v2 (vnd integer)"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "poteto-tibo-dog-engineering",
+      "title": "Lauren (@poteto) - Kiến Trúc Kỹ Thuật & Agentic Workflow Game tibo.dog",
+      "category": "agentic-workflows",
+      "path": "entries/agentic-workflows/poteto-tibo-dog-engineering.md",
+      "one_liner": "Xây dựng web game 3D trong 4 ngày với ~1,150 PRs bằng cách kết hợp AI Agent, Zero-Allocation Lint rules, kiểm chứng hình thức TLA+, và Headless Bot Simulation.",
+      "core_invariant": "Tác giả phát triển tựa game web 3D [tibo.dog](https://tibo.dog) như một dự án side project trong vòng 4 ngày với hơn 1.150 PRs được merge vào production. Thay vì chỉ dùng AI agent để gõ code đơn thuần, tác giả thiết lập một hệ thống **rào chắn cấu tr",
+      "triggers": [
+        "1",
+        "150 prs trong 4 ngày",
+        "cấm comment code",
+        "headless bot playtesting.",
+        "poteto",
+        "rào chắn lint rule",
+        "tibo-dog",
+        "tla-plus",
+        "zero-alloc"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "retrospective-harness-adaptation",
+      "title": "Retrospective Harness Adaptation & Negative Transfer: Evaluating Agent Self-Evolution",
+      "category": "agentic-workflows",
+      "path": "entries/agentic-workflows/retrospective-harness-adaptation-and-negative-transfer.md",
+      "one_liner": "Self-evolving agent harnesses often inject speculative rules that increase task latency by up to 198% or trigger false regression panics; harness changes require closed-loop recurrence tracking and proactive pruning.",
+      "core_invariant": "Agent harnesses that modify their own instructions (via skills like `/retro` or prompt self-reflection) suffer from three systemic failure modes:",
+      "triggers": [
+        "bẫy danh sách lỗi dở dang (false regression panic)",
+        "chu trình canary-evaluate-prune.",
+        "harness-adaptation",
+        "harness-tax",
+        "negative-transfer",
+        "pruning",
+        "thuế harness (+198% latency)",
+        "đề xuất prior-driven vs experience-driven"
+      ],
+      "aspects": [
+        "all",
+        "blueprint",
+        "invariants",
+        "mechanisms",
+        "schema"
+      ]
+    },
+    {
+      "id": "reverse-engineering-saas-api",
+      "title": "Reverse Engineering SaaS Internal API & Bypassing Immutable Constraints",
+      "category": "agentic-workflows",
+      "path": "entries/agentic-workflows/reverse-engineering-saas-api-bypassing-immutable-constraints.md",
+      "one_liner": "Thay vì dùng Agent click UI mò mẫm (chậm và dễ vỡ), trích xuất token từ session trình duyệt sống để dịch ngược REST API nội bộ, từ đó vượt qua các rào cản bất biến (immutable IAM email & giới hạn license SaaS).",
+      "core_invariant": "Khi cần đồng bộ dữ liệu vào một hệ thống SaaS kín (iPOS HRM) không có Open API công khai: - Web không cho phép import Excel để ghi đè cập nhật nhân viên cũ (chỉ cho thêm mới). - Trường `Email` trên giao diện bị khóa cứng (`readonly`) vì gắn chặt với ",
+      "triggers": [
+        "dịch ngược spa js bundle",
+        "lách rào cản immutable iam email & giới hạn quota license saas.",
+        "reverse-engineering",
+        "session-hijack",
+        "spa-sniffing",
+        "trích xuất cookie từ trình duyệt đang mở"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "source-backed-agent-memory",
+      "title": "Bộ nhớ của agent cần nguồn đối chiếu, không chỉ câu tóm tắt",
+      "category": "agentic-workflows",
+      "path": "entries/agentic-workflows/source-backed-agent-memory.md",
+      "one_liner": "Giữ snapshot nguồn và đường truy xuất đến đoạn gốc; chỉ đưa phần cần dùng vào context, rồi quản lý riêng kiến thức đã chọn lọc.",
+      "core_invariant": "Bộ nhớ dài hạn không nhất thiết bắt đầu bằng cách gửi toàn bộ lịch sử cho model hoặc dựng một dịch vụ embedding. Có thể index nguồn trên máy, tìm vài đoạn liên quan và cho agent đọc lại bằng công cụ có giới hạn.",
+      "triggers": [
+        "agent-memory",
+        "nhánh session đang hoạt động",
+        "provenance",
+        "snapshot bất biến",
+        "source-backed",
+        "sqlite fts5",
+        "sqlite-fts5",
+        "truy xuất có giới hạn."
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "task-completion-needs-independent-evidence",
+      "title": "Agent dừng chạy không có nghĩa là task đã hoàn tất",
+      "category": "agentic-workflows",
+      "path": "entries/agentic-workflows/task-completion-needs-independent-evidence.md",
+      "one_liner": "Tách tín hiệu kết thúc lượt suy luận khỏi việc nghiệm thu kết quả, rồi kiểm tra kết quả bằng một luồng độc lập.",
+      "core_invariant": "Có ít nhất ba việc khác nhau: runtime nhận prompt, agent ngừng sinh câu trả lời và công việc đạt yêu cầu. Không được dùng tín hiệu của việc trước để kết luận việc sau.",
+      "triggers": [
+        "agent_settled",
+        "bằng chứng âm",
+        "hash do host tính",
+        "independent-evidence",
+        "kiểm tra sau cleanup.",
+        "task-completion",
+        "verifier",
+        "verifier chỉ đọc"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    },
+    {
+      "id": "worker-process-ownership",
+      "title": "Sở hữu vòng đời worker, không chỉ giữ PID",
+      "category": "architecture",
+      "path": "entries/architecture/worker-process-ownership-and-recovery.md",
+      "one_liner": "Dùng process group, guardian và danh tính có thể đối chiếu để thu hồi worker sau crash; đừng gọi cơ chế đó là sandbox.",
+      "core_invariant": "Một worker thường là cây tiến trình, không phải một PID. Process chạy lệnh có thể thoát nhưng các process con vẫn chạy hoặc giữ stdout/stderr mở. Nếu host chờ EOF vô hạn, một task đã dừng có thể tiếp tục chiếm slot.",
+      "triggers": [
+        "identity khi recovery; không phải sandbox.",
+        "linux guardian",
+        "linux-guardian",
+        "parent chết",
+        "pipe bị giữ",
+        "process group",
+        "process-ownership",
+        "readiness",
+        "worker"
+      ],
+      "aspects": [
+        "all",
+        "application",
+        "invariants",
+        "links",
+        "mechanisms"
+      ]
+    }
+  ]
+}
