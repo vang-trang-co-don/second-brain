@@ -43,6 +43,8 @@
   * *Keywords:* Bộ ba trạng thái tạm tính, phân biệt pre-bill vs settled invoice, thuật toán bắt lệch bill stale drift tự động, visual semantics đa điểm (floor plan, quick switch bar, cart panel), bảo toàn qua giao ca & offline-first.
 * [Kiến Trúc Quản Lý Kho & Vòng Đời Tồn Kho F&B: Định Lượng Món (BOM), Cân Bằng Kho & Đối Soát Chuỗi](entries/architecture/fnb-inventory-stocktake-and-bom-lifecycle.md)
   * *Keywords:* BOM công thức món, khấu trừ tự động khi chốt bill, kiểm kho 3 trạng thái (Stocktake), Moving Average Cost (MAC), chênh lệch chuyển kho liên chi nhánh, xử lý bán âm kho.
+* [Triết Lý & Định Luật Phổ Quát Trong Kỹ Thuật Phần Mềm & Thiết Kế Kiến Trúc (Software Engineering Laws & Universal Heuristics)](entries/architecture/software-engineering-universal-heuristics-and-laws.md)
+  * *Keywords:* Bản chất Engineering (programming over time), 4 định luật tự nhiên (Gall, Lehman, Conway, Hyrum), 3 la bàn kiến trúc (Coupling/Cohesion, Reversibility, State Scope), 6 khẩu quyết kỹ thuật cốt lõi.
 * [Triết Lý Thiết Kế & Công Thức Kỹ Thuật UI/UX B2B SaaS Tốc Độ Cao (Linear, Base.vn, Raycast, Plane)](entries/architecture/b2b-saas-ui-ux-design-heuristics-and-engineering-patterns.md)
   * *Keywords:* Ngưỡng Doherty (<100ms), Progressive Disclosure, Side-over Drawer, Data table right-align numbers tabular-nums, Optimistic UI rollback Sonner, Keyboard ergonomics Cmd+K Esc, Shadcn Tailwind cheat-sheet.
 ### 4. 🎨 Web Creative & Procedural Generation

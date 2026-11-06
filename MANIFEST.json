@@ -307,6 +307,32 @@
       ]
     },
     {
+      "id": "software-engineering-universal-heuristics-and-laws",
+      "title": "Triết Lý & Định Luật Phổ Quát Trong Kỹ Thuật Phần Mềm & Thiết Kế Kiến Trúc (Software Engineering Laws & Universal Heuristics)",
+      "category": "architecture",
+      "path": "entries/architecture/software-engineering-universal-heuristics-and-laws.md",
+      "one_liner": "Bộ cẩm nang thực chiến chắt lọc các định luật tự nhiên của phần mềm (Gall, Lehman, Conway, Hyrum), 3 la bàn kiến trúc bất biến (Coupling/Cohesion, Reversibility, State Scope) và 6 khẩu quyết thiết kế giúp kỹ sư xây dựng hệ thống bền vững trước sự tàn phá của thời gian.",
+      "core_invariant": "Giả định sai lầm:: Dev thường đồng nhất \"kỹ thuật phần mềm\" với việc viết code chạy đúng logic, dùng ngôn ngữ xịn (Go, Rust), hoặc tách microservices cho hợp xu thế.",
+      "triggers": [
+        "3 la bàn kiến trúc (coupling/cohesion",
+        "4 định luật tự nhiên (gall",
+        "6 khẩu quyết kỹ thuật cốt lõi.",
+        "bản chất engineering (programming over time)",
+        "conway",
+        "hyrum)",
+        "lehman",
+        "reversibility",
+        "state scope)"
+      ],
+      "aspects": [
+        "all",
+        "invariants",
+        "links",
+        "mechanisms",
+        "probes"
+      ]
+    },
+    {
       "id": "source-backed-agent-memory",
       "title": "Bộ nhớ của agent cần nguồn đối chiếu, không chỉ câu tóm tắt",
       "category": "agentic-workflows",
